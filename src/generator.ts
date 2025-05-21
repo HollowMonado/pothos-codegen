@@ -1,7 +1,9 @@
-import { generatorHandler, GeneratorOptions } from "@prisma/generator-helper";
-import { generateCrud } from "./crudGenerator";
-import { generateInputs } from "./inputsGenerator";
-import { getConfig } from "./utils/config";
+import pkg, { GeneratorOptions } from "@prisma/generator-helper";
+import { generateCrud } from "./crudGenerator/index.js";
+import { generateInputs } from "./inputsGenerator/index.js";
+import { getConfig } from "./utils/config.js";
+
+const { generatorHandler } = pkg;
 
 // Types from the generator, in `schema.prisma`
 type SchemaGeneratorExtensionOptions = { generatorConfigPath?: string };

@@ -1,5 +1,5 @@
-import { useTemplate } from "../../utils/template";
-import { makeResolver } from "./resolver";
+import { useTemplate } from "utils/template.js";
+import { makeResolver } from "./resolver.js";
 
 const queryNames = ["findFirst", "findMany", "count", "findUnique"] as const;
 type OperationOptions = (typeof queryNames)[number];

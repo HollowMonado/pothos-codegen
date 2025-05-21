@@ -1,9 +1,9 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { getBuilderCalculatedImport } from "../../crudGenerator/utils/parts";
-import { ConfigInternal } from "../../utils/config";
-import { useTemplate } from "../../utils/template";
-import { getUsedScalars } from "./dmmf";
-import { getInputFieldsString } from "./inputFields";
+import { getBuilderCalculatedImport } from "crudGenerator/utils/parts.js";
+import { ConfigInternal } from "utils/config.js";
+import { useTemplate } from "utils/template.js";
+import { getUsedScalars } from "./dmmf.js";
+import { getInputFieldsString } from "./inputFields.js";
 import * as T from "./templates";
 
 export const getEnums = (dmmf: DMMF.Document) => {

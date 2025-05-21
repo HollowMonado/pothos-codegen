@@ -1,17 +1,17 @@
 import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
-import { ConfigInternal } from "../../utils/config";
-import { getConfigCrudUnderscore } from "../../utils/configUtils";
-import { writeFile } from "../../utils/filesystem";
+import { ConfigInternal } from "utils/config.js";
+import { getConfigCrudUnderscore } from "utils/configUtils.js";
+import { writePothosFile } from "utils/filesystem.js";
+import { useTemplate } from "utils/template.js";
 import {
     escapeQuotesAndMultilineSupport,
     firstLetterLowerCase,
     firstLetterUpperCase,
     getCompositeName,
 } from "../../utils/string";
-import { useTemplate } from "../../utils/template";
-import { objectTemplate } from "../templates/object";
-import { getObjectFieldsString } from "./objectFields";
+import { objectTemplate } from "../templates/object.js";
+import { getObjectFieldsString } from "./objectFields.js";
 
 type ResolverType = "queries" | "mutations";
 
@@ -80,7 +80,7 @@ export async function writeIndex(
         );
     const outputPath = path.join(config.crud.outputDir, model.name, "index.ts");
     const content = exports.join("\n") + "\n";
-    await writeFile(config, "crud.model.index", content, outputPath);
+    await writePothosFile(config, "crud.model.index", content, outputPath);
     return exportsWithName;
 }
 
@@ -114,7 +114,7 @@ export async function writeObject(
     });
 
     // Write output
-    await writeFile(
+    await writePothosFile(
         config,
         "crud.model.object",
         useTemplate(objectTemplate, {
@@ -213,7 +213,7 @@ export async function writeResolvers(
                 fileLocation,
             });
 
-            return writeFile(
+            return writePothosFile(
                 config,
                 "crud.model.resolver",
                 useTemplate(template, {
@@ -231,7 +231,7 @@ export async function writeResolvers(
     );
 
     if (resolvers.length)
-        await writeFile(
+        await writePothosFile(
             config,
             "crud.model.resolverIndex",
             // TODO Refactor this logic + tests

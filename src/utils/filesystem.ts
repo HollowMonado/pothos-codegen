@@ -1,9 +1,9 @@
 import { PathLike } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { env } from "../env";
-import { ConfigInternal } from "./config";
-import { Replacer, ReplacerSection } from "./replacer";
+import { env } from "node:process";
+import { ConfigInternal } from "./config.js";
+import { Replacer, ReplacerSection } from "./replacer.js";
 
 export const debugLog = async (value: string, timestamp = true) => {
     if (!env.isTesting) return;
@@ -18,7 +18,7 @@ export const deleteFolder = (path: PathLike) => {
 };
 
 /** Replace content before writing to file using the replacers set in the config file */
-export const writeFile = async (
+export const writePothosFile = async (
     config: ConfigInternal,
     section: ReplacerSection,
     content: string,

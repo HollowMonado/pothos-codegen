@@ -1,4 +1,4 @@
-import { makeResolver } from "./resolver";
+import { makeResolver } from "./resolver.js";
 
 const mutationNames = [
     "createMany",

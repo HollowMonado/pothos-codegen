@@ -12,7 +12,6 @@
         "externalHelpers": false,
         "keepClassNames": true,
         "baseUrl": "./src",
-        "paths": { "@/*": ["*"] },
         "preserveAllComments": false
     },
     "module": {

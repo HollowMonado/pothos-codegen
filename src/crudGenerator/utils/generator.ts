@@ -1,5 +1,5 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { ConfigInternal } from "../../utils/config";
+import { ConfigInternal } from "utils/config.js";
 import { mutations as MutationTemplates } from "../templates/mutation";
 import { queries as QueryTemplates } from "../templates/query";
 import {
@@ -24,6 +24,7 @@ export async function generateModel(
     if (!model) return { index: [], resolvers: [] };
 
     await writeObject(config, model);
+
     const queries = await writeResolvers(
         config,
         model,

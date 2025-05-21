@@ -1,16 +1,16 @@
-import { getDMMF, getSchema } from "@prisma/internals";
-import path from "path";
+import { getDMMF } from "@prisma/internals";
+import { readFileSync } from "fs";
 
-const simplePrismaSchema = getSchema(
-    path.join(__dirname, "./simpleSchema.prisma")
-);
-const complexPrismaSchema = getSchema(
-    path.join(__dirname, "./complexSchema.prisma")
-);
+const simplePrismaSchemaPath = "./tests/data/simpleSchema.prisma";
+const complexPrismaSchemaPath = "./tests/data/complexSchema.prisma";
 
 export const getSampleDMMF = async (type: "complex" | "simple") => {
-    const datamodelSchema =
-        type === "complex" ? complexPrismaSchema : simplePrismaSchema;
+    const datamodelSchemaPath =
+        type === "complex" ? complexPrismaSchemaPath : simplePrismaSchemaPath;
 
-    return getDMMF({ datamodel: await datamodelSchema });
+    const schema = await readFileSync(datamodelSchemaPath, {
+        encoding: "utf8",
+    });
+
+    return getDMMF({ datamodel: schema });
 };

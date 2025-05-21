@@ -1,4 +1,4 @@
-import { ConfigInternal } from "./config";
+import { ConfigInternal } from "./config.js";
 
 export function getConfigCrudUnderscore(config: ConfigInternal) {
     if (config.crud.underscoreBetweenObjectVariableNames) return "_";

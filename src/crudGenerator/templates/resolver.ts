@@ -1,4 +1,4 @@
-import { useTemplate } from "../../utils/template";
+import { useTemplate } from "utils/template.js";
 
 export const makeResolver = (
     root: "Query" | "Mutation",
@@ -32,7 +32,7 @@ export const makeResolver = (
     );
 
 export const resolverTemplate = `#{inputsImporter}#{imports}#{resolverImports}#{builderCalculatedImport}
-import { define#{root}, define#{root}Function, define#{root}#{object} } from '../../utils';
+
 
 export const #{operation}#{modelName}#{root}Args = builder.args((t) => (#{args}))
 

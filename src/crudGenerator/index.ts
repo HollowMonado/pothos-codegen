@@ -1,16 +1,16 @@
 import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
-import { ConfigInternal } from "../utils/config";
-import { getConfigCrudUnderscore } from "../utils/configUtils";
-import { deleteFolder, writeFile } from "../utils/filesystem";
-import { useTemplate } from "../utils/template";
+import { ConfigInternal } from "utils/config.js";
+import { getConfigCrudUnderscore } from "utils/configUtils.js";
+import { deleteFolder, writePothosFile } from "utils/filesystem.js";
+import { useTemplate } from "utils/template.js";
 import {
     autoCrudTemplate,
     objectsTemplate,
     utilsTemplate,
 } from "./templates/root";
-import { generateModel } from "./utils/generator";
-import { getBuilderCalculatedImport } from "./utils/parts";
+import { generateModel } from "./utils/generator.js";
+import { getBuilderCalculatedImport } from "./utils/parts.js";
 
 export async function generateCrud(
     config: ConfigInternal,
@@ -49,7 +49,7 @@ export async function generateCrud(
         fileLocation: fileLocationObjects,
     });
 
-    await writeFile(
+    await writePothosFile(
         config,
         "crud.objects",
         useTemplate(objectsTemplate, {
@@ -75,7 +75,7 @@ export async function generateCrud(
     });
 
     // Generate root utils.ts file
-    await writeFile(
+    await writePothosFile(
         config,
         "crud.utils",
         useTemplate(utilsTemplate, { builderCalculatedImport }),
@@ -132,7 +132,7 @@ export async function generateCrud(
             fileLocation,
         });
 
-        await writeFile(
+        await writePothosFile(
             config,
             "crud.autocrud",
             useTemplate(autoCrudTemplate, {

@@ -1,6 +1,7 @@
-import { generateInputs } from "../src/inputsGenerator";
-import { getDefaultConfig } from "../src/utils/config";
-import { getSampleDMMF } from "./data/getPrismaSchema.js";
+import { describe, it } from "vitest";
+import { generateInputs } from "../src/inputsGenerator/index.ts";
+import { getDefaultConfig } from "../src/utils/config.ts";
+import { getSampleDMMF } from "./data/getPrismaSchema.ts";
 
 describe("inputsGenerator", () => {
     it("should generate inputs", async () => {

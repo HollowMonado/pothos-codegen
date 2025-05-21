@@ -1,11 +1,11 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { ConfigInternal } from "../../utils/config";
-import { getConfigCrudUnderscore } from "../../utils/configUtils";
+import { ConfigInternal } from "utils/config.js";
+import { getConfigCrudUnderscore } from "utils/configUtils.js";
+import { useTemplate } from "utils/template.js";
 import {
     escapeQuotesAndMultilineSupport,
     firstLetterUpperCase,
 } from "../../utils/string";
-import { useTemplate } from "../../utils/template";
 import {
     fieldObjectTemplate,
     listRelationObjectTemplate,

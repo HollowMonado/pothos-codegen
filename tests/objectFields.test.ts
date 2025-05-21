@@ -1,5 +1,6 @@
-import { cleanifyDocumentation } from "../src/crudGenerator/utils/objectFields";
-import { escapeQuotesAndMultilineSupport } from "../src/utils/string";
+import { describe, expect, it } from "vitest";
+import { cleanifyDocumentation } from "../src/crudGenerator/utils/objectFields.ts";
+import { escapeQuotesAndMultilineSupport } from "../src/utils/string.ts";
 
 describe("objectFields", () => {
     it("cleanifyDocumentation", () => {

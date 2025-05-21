@@ -1,7 +1,7 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { env } from "../env";
-import { ConfigInternal } from "../utils/config";
-import { writeFile } from "../utils/filesystem";
+import { env } from "process";
+import { ConfigInternal } from "utils/config.js";
+import { writePothosFile } from "utils/filesystem.js";
 import {
     getEnums,
     getImports,
@@ -26,7 +26,7 @@ export async function generateInputs(
     dmmf: DMMF.Document
 ): Promise<void> {
     if (env.isTesting)
-        await writeFile(
+        await writePothosFile(
             config,
             "debug.dmmf",
             JSON.stringify(dmmf, null, 2),
@@ -42,5 +42,5 @@ export async function generateInputs(
     const inputs = getInputs(config, dmmf);
     const content = [imports, util, scalars, enums, inputs].join("\n\n");
 
-    await writeFile(config, "inputs", content, fileLocation);
+    await writePothosFile(config, "inputs", content, fileLocation);
 }

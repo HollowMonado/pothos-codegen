@@ -1,6 +1,7 @@
-import { generateCrud } from "../src/crudGenerator";
-import { getDefaultConfig } from "../src/utils/config";
-import { getSampleDMMF } from "./data/getPrismaSchema";
+import { describe, it } from "vitest";
+import { generateCrud } from "../src/crudGenerator/index.ts";
+import { getDefaultConfig } from "../src/utils/config.ts";
+import { getSampleDMMF } from "./data/getPrismaSchema.ts";
 
 describe("crudGenerator", () => {
     it("should generate all files", async () => {

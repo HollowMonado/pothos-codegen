@@ -1,6 +1,7 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ExtendedGeneratorOptions } from "../src/generator";
 import * as config from "../src/utils/config";
-import { getSampleDMMF } from "./data/getPrismaSchema.js";
+import { getSampleDMMF } from "./data/getPrismaSchema.ts";
 
 const cwd = process.cwd();
 
@@ -13,13 +14,14 @@ const generateOptions = async (
         datamodel: "",
         datasources: [],
         generator: {
+            sourceFilePath: `${cwd}/tests/data/simpleSchema.prisma`,
             name: "pothosCrud",
             provider: {
                 fromEnvVar: null,
                 value: "ts-node --transpile-only ../../src/generator.ts",
             },
             output: {
-                value: `${cwd}/src/tests/generated/inputs.ts`,
+                value: `${cwd}/src/generated/inputs.ts`,
                 fromEnvVar: "null",
             },
             config: {},
@@ -30,10 +32,11 @@ const generateOptions = async (
         dmmf,
         otherGenerators: [
             {
+                sourceFilePath: `${cwd}/tests/data/simpleSchema.prisma`,
                 name: "client",
                 provider: { fromEnvVar: null, value: "prisma-client-js" },
                 output: {
-                    value: `${cwd}/src/tests/@prisma/client`,
+                    value: `${cwd}/tests/data/@prisma/client`,
                     fromEnvVar: null,
                 },
                 config: {},
@@ -41,10 +44,11 @@ const generateOptions = async (
                 previewFeatures: [],
             },
             {
+                sourceFilePath: `${cwd}/tests/data/simpleSchema.prisma`,
                 name: "pothos",
                 provider: { fromEnvVar: null, value: "prisma-pothos-types" },
                 output: {
-                    value: `${cwd}/src/tests/generated/objects.d.ts`,
+                    value: `${cwd}/tests/data/generated/objects.d.ts`,
                     fromEnvVar: null,
                 },
                 config: { clientOutput: ".prisma/client" },
@@ -53,9 +57,8 @@ const generateOptions = async (
                 isCustomOutput: true,
             },
         ],
-        schemaPath: `${cwd}/src/tests/simpleSchema.prisma`,
+        schemaPath: `${cwd}/tests/data/simpleSchema.prisma`,
         version: "272861e07ab64f234d3ffc4094e32bd61775599c",
-        dataProxy: false,
     } satisfies ExtendedGeneratorOptions;
 };
 
@@ -116,7 +119,7 @@ describe("parseConfig", () => {
     });
 
     it(`should parse the config file`, async () => {
-        const configs = await parseConfig("../tests/configs");
+        const configs = await parseConfig("../../tests/data/configs.js");
 
         expect(configs).toEqual({
             crud: expect.objectContaining({
@@ -139,7 +142,7 @@ describe("parseConfig", () => {
 
 describe("getConfig", () => {
     const { getConfig } = config;
-    const getDefaultConfigMock = jest.spyOn(config, "getDefaultConfig");
+    const getDefaultConfigMock = vi.spyOn(config, "getDefaultConfig");
 
     it(`should return the default config if a configPath doesn't exist`, async () => {
         const options = await generateOptions();
@@ -176,7 +179,7 @@ describe("getConfig", () => {
     });
 
     it(`should return custom configuration merged with the defaults`, async () => {
-        const options = await generateOptions("../tests/configs.js");
+        const options = await generateOptions("../data/configs.js");
         const configs = await getConfig(options);
 
         expect(getDefaultConfigMock).toHaveBeenCalledWith({});
