@@ -13,14 +13,8 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc",
-    "tscheck": "tsc -noEmit",
-    "prebuild": "yarn clean",
-    "postbuild": "shx cp ./README.md ./dist && shx chmod +x ./dist/src/bin.js",
-    "clean": "shx rm -rf dist",
-    "pub": "cd dist && npm publish",
-    "check-src-and-examples": "yarn test && yarn tscheck && cd examples/inputs-simple-sqlite && yarn generate && yarn tscheck",
-    "fullcheck": "yarn check-src-and-examples"
+    "swc_compile": "swc src --out-dir=dist",
+    "build": "npm run swc_compile"
   },
   "bin": {
     "prisma-generator-pothos-codegen": "./src/bin.js"
@@ -33,6 +27,8 @@
   },
   "devDependencies": {
     "@prisma/internals": "6.8.2",
+    "@swc/cli": "^0.7.7",
+    "@swc/core": "^1.11.24",
     "@types/jest": "29.5.14",
     "@types/node": "22.15.21",
     "jest": "^29.7.0",

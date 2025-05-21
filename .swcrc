@@ -1,0 +1,28 @@
+{
+    "$schema": "https://swc.rs/schema.json",
+    "jsc": {
+        "parser": {
+            "syntax": "typescript",
+            "tsx": false,
+            "dynamicImport": true,
+            "decorators": false
+        },
+        "target": "esnext",
+        "loose": true,
+        "externalHelpers": false,
+        "keepClassNames": true,
+        "baseUrl": "./src",
+        "paths": { "@/*": ["*"] },
+        "preserveAllComments": false
+    },
+    "module": {
+        "type": "es6",
+        "strict": true,
+        "strictMode": true,
+        "noInterop": false,
+        "lazy": false,
+        "resolveFully": true // TODO: this keeps index.js in the import path, for generated files
+    },
+    "minify": false,
+    "sourceMaps": true
+}
