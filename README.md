@@ -17,22 +17,22 @@ On `prisma generate` we create:
 <!-- toc -->
 
 - [Getting Started](#getting-started)
-  * [Install](#install)
-  * [Peer dependencies](#peer-dependencies)
-  * [Set Up](#set-up)
-    + [Add the generator to your schema.prisma](#add-the-generator-to-your-schemaprisma)
-    + [Add scalar types to the builder](#add-scalar-types-to-the-builder)
-    + [Create a configuration file (optional)](#create-a-configuration-file--optional-)
-    + [Run the generator](#run-the-generator)
+    - [Install](#install)
+    - [Peer dependencies](#peer-dependencies)
+    - [Set Up](#set-up)
+        - [Add the generator to your schema.prisma](#add-the-generator-to-your-schemaprisma)
+        - [Add scalar types to the builder](#add-scalar-types-to-the-builder)
+        - [Create a configuration file (optional)](#create-a-configuration-file--optional-)
+        - [Run the generator](#run-the-generator)
 - [Usage](#usage)
-  * [Inputs](#inputs)
-  * [Objects](#objects)
-  * [Queries and Mutations](#queries-and-mutations)
-  * [Auto define all `objects`, `queries` and `mutations` (crud operations)](#auto-define-all--objects----queries--and--mutations---crud-operations-)
-  * [Examples](#examples)
+    - [Inputs](#inputs)
+    - [Objects](#objects)
+    - [Queries and Mutations](#queries-and-mutations)
+    - [Auto define all `objects`, `queries` and `mutations` (crud operations)](#auto-define-all--objects----queries--and--mutations---crud-operations-)
+    - [Examples](#examples)
 - [Disclosures](#disclosures)
-  * [Models with only relations](#models-with-only-relations)
-  * [BigInt rename](#bigint-rename)
+    - [Models with only relations](#models-with-only-relations)
+    - [BigInt rename](#bigint-rename)
 
 <!-- tocstop -->
 
@@ -97,15 +97,19 @@ model User {
 #### Add scalar types to the builder
 
 ```ts
-import { Scalars } from 'prisma-generator-pothos-codegen';
-import { Prisma } from '.prisma/client';
+import { Scalars } from "prisma-generator-pothos-codegen";
+import { Prisma } from ".prisma/client";
 
 export const builder = new SchemaBuilder<{
-  // ... Context, plugins? ...
-  PrismaTypes: PrismaTypes; // required for @pothos/plugin-prisma integration (which is required)
-  Scalars: Scalars<Prisma.Decimal, Prisma.InputJsonValue | null, Prisma.InputJsonValue>; // required to define correct types for created scalars.
+    // ... Context, plugins? ...
+    PrismaTypes: PrismaTypes; // required for @pothos/plugin-prisma integration (which is required)
+    Scalars: Scalars<
+        Prisma.Decimal,
+        Prisma.InputJsonValue | null,
+        Prisma.InputJsonValue
+    >; // required to define correct types for created scalars.
 }>({
-  // Other builder config
+    // Other builder config
 });
 ```
 
@@ -116,90 +120,88 @@ export const builder = new SchemaBuilder<{
 
 /** @type {import('prisma-generator-pothos-codegen').Config} */
 module.exports = {
-  inputs: {
-    outputFilePath: './src/graphql/__generated__/inputs.ts',
-  },
-  crud: {
-    outputDir: './src/graphql/__generated__/',
-    inputsImporter: `import * as Inputs from '@graphql/__generated__/inputs';`,
-    resolverImports: `import prisma from '@lib/prisma';`,
-    prismaCaller: 'prisma',
-  },
-  global: {
-  },
+    inputs: { outputFilePath: "./src/graphql/__generated__/inputs.ts" },
+    crud: {
+        outputDir: "./src/graphql/__generated__/",
+        inputsImporter: `import * as Inputs from '@graphql/__generated__/inputs';`,
+        resolverImports: `import prisma from '@lib/prisma';`,
+        prismaCaller: "prisma",
+    },
+    global: {},
 };
 ```
 
 <details>
   <summary>Click to see all configuration options</summary>
 
-  ```ts
-  {
-    /** Input type generation config */
-    inputs?: {
-      /** Create simpler inputs for easier customization and ~65% less generated code. Default: `false` */
-      simple?: boolean;
-      /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
-      prismaImporter?: string;
-      /** Path to generate the inputs file to from project root. Default: `'./generated/inputs.ts'` */
-      outputFilePath?: string;
-      /** List of excluded scalars from generated output */
-      excludeScalars?: string[];
-      /** A function to replace generated source. Combined with global replacer config */
-      replacer?: Replacer<'inputs'>;
-      /** Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar.
-       *
-       * ATTENTION: Mapping non String requires a conversion inside resolver, once GraphQl ID Input are coerced to String by definition. Default: false */
-      mapIdFieldsToGraphqlId?: false | 'WhereUniqueInputs';
-    };
-    /** CRUD generation config */
-    crud?: {
-      /** Disable generaton of crud. Default: `false` */
-      disabled?: boolean;
-      /** How to import the inputs. Default `"import * as Inputs from '../inputs';"` */
-      inputsImporter?: string;
-      /** How to import the Prisma namespace at the objects.ts file. Default `"import { Prisma } from '.prisma/client';"`. Please use "resolverImports" to import prismaClient at resolvers. */
-      prismaImporter?: string;
-      /** How to call the prisma client. Default `'_context.prisma'` */
-      prismaCaller?: string;
-      /** Any additional imports you might want to add to the resolvers (e.g. your prisma client). Default: `''` */
-      resolverImports?: string;
-      /** Directory to generate crud code into from project root. Default: `'./generated'` */
-      outputDir?: string;
-      /** A function to replace generated source. Combined with global replacer config */
-      replacer?: Replacer<'crud'>;
-      /** A boolean to enable/disable generation of `autocrud.ts` which can be imported in schema root to auto generate all crud objects, queries and mutations. Default: `true` */
-      generateAutocrud?: boolean;
-      /** An array of parts of resolver names to be excluded from generation. Ie: ["User"] Default: [] */
-      excludeResolversContain?: string[];
-      /** An array of resolver names to be excluded from generation. Ie: ["upsertOneComment"] Default: [] */
-      excludeResolversExact?: string[];
-      /** An array of parts of resolver names to be included from generation (to bypass exclude contain). Ie: if exclude ["User"], include ["UserReputation"] Default: [] */
-      includeResolversContain?: string[];
-      /** An array of resolver names to be included from generation (to bypass exclude contain). Ie: if exclude ["User"], include ["UserReputation"] Default: [] */
-      includeResolversExact?: string[];
-      /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
-      deleteOutputDirBeforeGenerate?: boolean;
-      /** Export all crud queries/mutations/objects in objects.ts at root dir. Default: true */
-      exportEverythingInObjectsDotTs?: boolean;
-      /** Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar. Default: 'Objects' */
-      mapIdFieldsToGraphqlId?: false | 'Objects';
-      /** Change the generated variables from object.base.ts from something like `UserName` to `User_Name`. This avoids generated duplicated names in some cases. See [issue #58](https://github.com/Cauen/prisma-generator-pothos-codegen/issues/58). Default: false */
-      underscoreBetweenObjectVariableNames?: false | 'Objects';
-    };
-    /** Global config */
-    global?: {
-      /** A function to replace generated source */
-      replacer?: Replacer;
-      /** Location of builder to replace in all files. Relative to package root. ie: './src/schema/builder'. Default: './builder' */
-      builderLocation?: string;
-      /** Run function before generate */
-      beforeGenerate?: (dmmf: DMMF.Document) => void;
-      /** Run function after generate */
-      afterGenerate?: (dmmf: DMMF.Document) => void;
-    };
-  }
-  ```
+```ts
+{
+  /** Input type generation config */
+  inputs?: {
+    /** Create simpler inputs for easier customization and ~65% less generated code. Default: `false` */
+    simple?: boolean;
+    /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
+    prismaImporter?: string;
+    /** Path to generate the inputs file to from project root. Default: `'./generated/inputs.ts'` */
+    outputFilePath?: string;
+    /** List of excluded scalars from generated output */
+    excludeScalars?: string[];
+    /** A function to replace generated source. Combined with global replacer config */
+    replacer?: Replacer<'inputs'>;
+    /** Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar.
+     *
+     * ATTENTION: Mapping non String requires a conversion inside resolver, once GraphQl ID Input are coerced to String by definition. Default: false */
+    mapIdFieldsToGraphqlId?: false | 'WhereUniqueInputs';
+  };
+  /** CRUD generation config */
+  crud?: {
+    /** Disable generaton of crud. Default: `false` */
+    disabled?: boolean;
+    /** How to import the inputs. Default `"import * as Inputs from '../inputs';"` */
+    inputsImporter?: string;
+    /** How to import the Prisma namespace at the objects.ts file. Default `"import { Prisma } from '.prisma/client';"`. Please use "resolverImports" to import prismaClient at resolvers. */
+    prismaImporter?: string;
+    /** How to call the prisma client. Default `'_context.prisma'` */
+    prismaCaller?: string;
+    /** Any additional imports you might want to add to the resolvers (e.g. your prisma client). Default: `''` */
+    resolverImports?: string;
+    /** Directory to generate crud code into from project root. Default: `'./generated'` */
+    outputDir?: string;
+    /** A function to replace generated source. Combined with global replacer config */
+    replacer?: Replacer<'crud'>;
+    /** A boolean to enable/disable generation of `autocrud.ts` which can be imported in schema root to auto generate all crud objects, queries and mutations. Default: `true` */
+    generateAutocrud?: boolean;
+    /** An array of parts of resolver names to be excluded from generation. Ie: ["User"] Default: [] */
+    excludeResolversContain?: string[];
+    /** An array of resolver names to be excluded from generation. Ie: ["upsertOneComment"] Default: [] */
+    excludeResolversExact?: string[];
+    /** An array of parts of resolver names to be included from generation (to bypass exclude contain). Ie: if exclude ["User"], include ["UserReputation"] Default: [] */
+    includeResolversContain?: string[];
+    /** An array of resolver names to be included from generation (to bypass exclude contain). Ie: if exclude ["User"], include ["UserReputation"] Default: [] */
+    includeResolversExact?: string[];
+    /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
+    deleteOutputDirBeforeGenerate?: boolean;
+    /** Export all crud queries/mutations/objects in objects.ts at root dir. Default: true */
+    exportEverythingInObjectsDotTs?: boolean;
+    /** Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar. Default: 'Objects' */
+    mapIdFieldsToGraphqlId?: false | 'Objects';
+    /** Change the generated variables from object.base.ts from something like `UserName` to `User_Name`. This avoids generated duplicated names in some cases. See [issue #58](https://github.com/Cauen/prisma-generator-pothos-codegen/issues/58). Default: false */
+    underscoreBetweenObjectVariableNames?: false | 'Objects';
+  };
+  /** Global config */
+  global?: {
+    /** A function to replace generated source */
+    replacer?: Replacer;
+    /** Location of builder to replace in all files. Relative to package root. ie: './src/schema/builder'. Default: './builder' */
+    builderLocation?: string;
+    /** Run function before generate */
+    beforeGenerate?: (dmmf: DMMF.Document) => void;
+    /** Run function after generate */
+    afterGenerate?: (dmmf: DMMF.Document) => void;
+  };
+}
+```
+
 </details>
 <br/>
 
@@ -217,7 +219,7 @@ npx prisma generate
 
 ## Usage
 
-###  Inputs
+### Inputs
 
 You can use `@Pothos.omit()` function calls in your prisma schema field descriptions to control which fields are used in the generated input types.
 
@@ -242,19 +244,21 @@ You can also augment/derive new inputs from the generated `inputs.ts` file.
 ```ts
 // ./src/graphql/User/inputs.ts
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from "@prisma/client";
 // Import generated input fields definition
-import { UserUpdateInputFields } from '@/graphql/__generated__/inputs';
+import { UserUpdateInputFields } from "@/graphql/__generated__/inputs";
 
 // Note: you can't use `builder.inputType` to generate this new input
 export const UserUpdateInputCustom = builder
-  .inputRef<Prisma.UserUpdateInput & { customArg: string }>('UserUpdateInputCustom')
-  .implement({
-    fields: (t) => ({
-      ...UserUpdateInputFields(t),
-      customArg: t.field({ required: true, type: 'String' }),
-    }),
-  });
+    .inputRef<
+        Prisma.UserUpdateInput & { customArg: string }
+    >("UserUpdateInputCustom")
+    .implement({
+        fields: (t) => ({
+            ...UserUpdateInputFields(t),
+            customArg: t.field({ required: true, type: "String" }),
+        }),
+    });
 ```
 
 ### Objects
@@ -262,34 +266,44 @@ export const UserUpdateInputCustom = builder
 ```ts
 // ./src/graphql/User/object.ts
 
-import { UserObject } from '@/graphql/__generated__/User';
-import { builder } from '@/graphql/builder'; // Pothos schema builder
+import { UserObject } from "@/graphql/__generated__/User";
+import { builder } from "@/graphql/builder"; // Pothos schema builder
 
 // Use the Object export to accept all default generated query code
-builder.prismaObject('User', UserObject);
+builder.prismaObject("User", UserObject);
 
 // Or modify it as you wish
-builder.prismaObject('User', {
-  ...UserObject,
-  fields: (t) => {
-    // Type-safely omit and rename fields
-    const { password: _password, email: emailAddress, ...fields } = UserObject.fields(t);
-    const sessionsField = UserSessionsFieldObject(t);
+builder.prismaObject("User", {
+    ...UserObject,
+    fields: (t) => {
+        // Type-safely omit and rename fields
+        const {
+            password: _password,
+            email: emailAddress,
+            ...fields
+        } = UserObject.fields(t);
+        const sessionsField = UserSessionsFieldObject(t);
 
-    return {
-      ...fields,
-      // Renamed field
-      emailAddress,
-      // Edit and extend field
-      sessions: t.relation('sessions', {
-        ...sessionsField,
-        args: { ...sessionsField.args, customArg: t.arg({ type: 'String', required: false }) },
-        authScopes: { admin: true },
-      }),
-      // Add custom fields
-      customField: t.field({ type: 'String', resolve: () => 'Hello world!' }),
-    };
-  },
+        return {
+            ...fields,
+            // Renamed field
+            emailAddress,
+            // Edit and extend field
+            sessions: t.relation("sessions", {
+                ...sessionsField,
+                args: {
+                    ...sessionsField.args,
+                    customArg: t.arg({ type: "String", required: false }),
+                },
+                authScopes: { admin: true },
+            }),
+            // Add custom fields
+            customField: t.field({
+                type: "String",
+                resolve: () => "Hello world!",
+            }),
+        };
+    },
 });
 ```
 
@@ -298,32 +312,38 @@ builder.prismaObject('User', {
 ```ts
 // ./src/graphql/User/query.ts
 
-import { findManyUserQuery, findManyUserQueryObject } from '@/graphql/__generated__/User';
-import { builder } from '@/graphql/builder'; // Pothos schema builder
+import {
+    findManyUserQuery,
+    findManyUserQueryObject,
+} from "@/graphql/__generated__/User";
+import { builder } from "@/graphql/builder"; // Pothos schema builder
 
 // Use the Query exports to accept all default generated query code
 builder.queryFields(findManyUserQuery);
 
 // Use the QueryObject exports to override or add to the generated code
 builder.queryFields((t) => {
-  const field = findManyUserQueryObject(t);
-  return {
-    findManyUser: t.prismaField({
-      // Inherit all the generated properties
-      ...field,
+    const field = findManyUserQueryObject(t);
+    return {
+        findManyUser: t.prismaField({
+            // Inherit all the generated properties
+            ...field,
 
-      // Modify the args and use custom arg in a custom resolver
-      args: { ...field.args, customArg: t.arg({ type: 'String', required: false }) },
-      resolve: async (query, root, args, context, info) => {
-        const { customArg } = args;
-        console.log(customArg);
-        return field.resolve(query, root, args, context, info);
-      },
+            // Modify the args and use custom arg in a custom resolver
+            args: {
+                ...field.args,
+                customArg: t.arg({ type: "String", required: false }),
+            },
+            resolve: async (query, root, args, context, info) => {
+                const { customArg } = args;
+                console.log(customArg);
+                return field.resolve(query, root, args, context, info);
+            },
 
-      // Add an custom extension
-      authScopes: { admin: true },
-    }),
-  };
+            // Add an custom extension
+            authScopes: { admin: true },
+        }),
+    };
 });
 ```
 

@@ -12,7 +12,7 @@ export const modelNames = [
 ] as const;
 
 export type Model = typeof modelNames[number];
-`
+`;
 
 export const utilsTemplate = `import {
   FieldOptionsFromKind,
@@ -171,7 +171,7 @@ export const definePrismaObject = <
   _: Name,
   obj: Obj,
 ) => obj;
-`
+`;
 
 // TODO: Refactor getParams to link model with object base, and remove any
 /**
@@ -300,4 +300,4 @@ export function generateAllCrud(opts?: CrudOptions) {
   generateAllQueries(opts);
   generateAllMutations(opts);
 }
-`
+`;
