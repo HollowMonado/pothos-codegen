@@ -14,92 +14,16 @@ export const modelNames = [
 export type Model = typeof modelNames[number];
 `;
 
-export const utilsTemplate = `import {
-  FieldOptionsFromKind,
-  InputFieldMap,
-  InterfaceParam,
-  MutationFieldBuilder,
-  MutationFieldsShape,
-  ObjectRef,
-  QueryFieldBuilder,
-  QueryFieldsShape,
-  TypeParam,
-} from '@pothos/core';
+export const utilsTemplate = `
+import { FieldKind, FieldOptionsFromKind, InputFieldMap, InterfaceParam, ObjectRef, TypeParam } from "@pothos/core";
 import {
-  PrismaFieldOptions,
-  PrismaObjectTypeOptions,
-  RelatedFieldOptions,
-} from '@pothos/plugin-prisma';#{builderCalculatedImport}
+    PrismaFieldOptions,
+    PrismaModelTypes,
+    PrismaObjectTypeOptions,
+    RelatedFieldOptions,
+} from "@pothos/plugin-prisma";#{builderCalculatedImport}
 
 type Types = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
-
-export const defineQuery = <Q extends QueryFieldsShape<Types>>(q: Q) => q;
-
-export const defineQueryFunction = <Obj>(
-  func: (t: QueryFieldBuilder<Types, Types['Root']>) => Obj,
-) => func;
-
-export const defineQueryObject = <
-  Type extends TypeParam<Types>,
-  Nullable extends boolean,
-  Args extends InputFieldMap,
->(
-  obj: FieldOptionsFromKind<Types, Types['Root'], Type, Nullable, Args, 'Query', Types, unknown>,
-) => obj as { type: Type; nullable: Nullable; args: Args; resolve: typeof obj['resolve'] };
-
-export const defineQueryPrismaObject = <
-  Type extends keyof Types['PrismaTypes'] | [keyof Types['PrismaTypes']],
-  Model extends Types['PrismaTypes'][Type extends [unknown] ? Type[0] : Type],
-  Args extends InputFieldMap,
-  Nullable extends boolean,
->(
-  def: PrismaFieldOptions<
-    Types,
-    Types['Root'],
-    Type,
-    Model,
-    Type extends [unknown] ? [ObjectRef<Types, Model['Shape']>] : ObjectRef<Types, Model['Shape']>,
-    Args,
-    Nullable,
-    unknown,
-    unknown,
-    'Query'
-  >,
-) => def as { type: Type; nullable: Nullable; args: Args; resolve: typeof def['resolve'] };
-
-export const defineMutation = <M extends MutationFieldsShape<Types>>(m: M) => m;
-
-export const defineMutationFunction = <Obj>(
-  func: (t: MutationFieldBuilder<Types, Types['Root']>) => Obj,
-) => func;
-
-export const defineMutationObject = <
-  Type extends TypeParam<Types>,
-  Nullable extends boolean,
-  Args extends InputFieldMap,
->(
-  obj: FieldOptionsFromKind<Types, Types['Root'], Type, Nullable, Args, 'Mutation', Types, unknown>,
-) => obj as { type: Type; nullable: Nullable; args: Args; resolve: typeof obj['resolve'] };
-
-export const defineMutationPrismaObject = <
-  Type extends keyof Types['PrismaTypes'] | [keyof Types['PrismaTypes']],
-  Model extends Types['PrismaTypes'][Type extends [unknown] ? Type[0] : Type],
-  Args extends InputFieldMap,
-  Nullable extends boolean,
->(
-  obj: PrismaFieldOptions<
-    Types,
-    Types['Root'],
-    Type,
-    Model,
-    Type extends [unknown] ? [ObjectRef<Types, Model['Shape']>] : ObjectRef<Types, Model['Shape']>,
-    Args,
-    Nullable,
-    unknown,
-    unknown,
-    'Mutation'
-  >,
-) => obj as { type: Type; nullable: Nullable; args: Args; resolve: typeof obj['resolve'] };
 
 export const defineFieldObject = <
   Name extends keyof Types['PrismaTypes'],
@@ -171,6 +95,46 @@ export const definePrismaObject = <
   _: Name,
   obj: Obj,
 ) => obj;
+
+
+type PothosBuilderTypes = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
+type PrismaModels = keyof PothosBuilderTypes["PrismaTypes"] | [keyof PothosBuilderTypes["PrismaTypes"]];
+
+type GeneralObject<OperationKind extends FieldKind> = FieldOptionsFromKind<
+    PothosBuilderTypes,
+    PothosBuilderTypes["Root"],
+    TypeParam<PothosBuilderTypes>,
+    boolean,
+    InputFieldMap,
+    OperationKind,
+    PothosBuilderTypes,
+    unknown
+>;
+export type QueryObject = GeneralObject<"Query">
+export type MutationObject = GeneralObject<"Mutation">
+
+type GeneralPrismaObject<OperationKind extends FieldKind> = {
+    type: PrismaModels;
+    nullable: boolean;
+    args: InputFieldMap;
+    resolve: PrismaFieldOptions<
+        PothosBuilderTypes,
+        PothosBuilderTypes["Root"],
+        PrismaModels,
+        PrismaModelTypes,
+        PrismaModels extends [unknown]
+            ? [ObjectRef<PothosBuilderTypes, PrismaModelTypes["Shape"]>]
+            : ObjectRef<PothosBuilderTypes, PrismaModelTypes["Shape"]>,
+        InputFieldMap,
+        boolean,
+        unknown,
+        unknown,
+        OperationKind
+    >["resolve"];
+};
+export type QueryPrismaObject = GeneralPrismaObject<"Query">;
+export type MutationPrismaObject = GeneralPrismaObject<"Mutation">;
+
 `;
 
 // TODO: Refactor getParams to link model with object base, and remove any
