@@ -2,15 +2,15 @@ import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
 import { getConfigCrudUnderscore } from "utils/configUtils.js";
-import { writePothosFile } from "utils/filesystem.js";
+import { debugLog, writePothosFile } from "utils/filesystem.js";
 import { useTemplate } from "utils/template.js";
 import {
     escapeQuotesAndMultilineSupport,
-    firstLetterLowerCase,
     firstLetterUpperCase,
     getCompositeName,
 } from "../../utils/string";
 import { objectTemplate } from "../templates/object.js";
+import { allOperationNames, generateResolver } from "./generator.js";
 import { getObjectFieldsString } from "./objectFields.js";
 
 type ResolverType = "queries" | "mutations";
@@ -161,92 +161,67 @@ const isExcludedResolver = (options: ConfigInternal, name: string) => {
     return false;
 };
 
-export const getBuilderCalculatedImport = ({
-    config,
-    fileLocation,
-}: {
-    fileLocation: string;
-    config: ConfigInternal;
-}) => {
-    const builderRelative = path.relative(
-        process.cwd(),
-        path.join(process.cwd(), config.global.builderLocation)
-    );
-    const relativeImport = path.relative(
-        path.dirname(fileLocation),
-        builderRelative
-    );
-    const stringImport =
-        path.sep === "\\" ? relativeImport.replace(/\\/g, "/") : relativeImport;
-
-    const importer = `\nimport { builder } from '${stringImport}';`;
-    return importer;
-};
-
 /** Write resolvers (e.g. findFirst, findUnique, createOne, etc) */
-export async function writeResolvers(
-    config: ConfigInternal,
-    model: DMMF.Model,
-    type: ResolverType,
-    templates: Record<string, string>
-): Promise<GeneratedResolver[]> {
-    const { inputsImporter } = config.crud;
-    const resolverInputsImporter = inputsImporter.includes("../")
-        ? inputsImporter.replace("../", "../../") // go a level inside to import
-        : inputsImporter;
-
-    const resolvers = Object.entries(templates).filter(
-        ([name]) => !isExcludedResolver(config, `${name}${model.name}`)
+export async function writeResolvers({
+    config,
+    model,
+    type,
+}: {
+    config: ConfigInternal;
+    model: DMMF.Model;
+    type: ResolverType;
+}): Promise<GeneratedResolver[]> {
+    const resolvers = allOperationNames.filter(
+        (operationName) =>
+            !isExcludedResolver(config, `${operationName}${model.name}`)
     );
 
     // Generate files
     await Promise.all(
-        resolvers.map(([name, template]) => {
+        resolvers.map((operationName) => {
             const fileLocation = path.join(
                 config.crud.outputDir,
                 model.name,
                 type,
-                `${name}.base.ts`
+                `${operationName}.base.ts`
             );
-            const builderCalculatedImport = getBuilderCalculatedImport({
-                config,
-                fileLocation,
-            });
 
-            return writePothosFile(
-                config,
-                "crud.model.resolver",
-                useTemplate(template, {
-                    modelName: model.name,
-                    modelNameLower: firstLetterLowerCase(model.name),
-                    modelNameUpper: firstLetterUpperCase(model.name),
-                    prisma: config.crud.prismaCaller,
-                    resolverImports: config.crud.resolverImports,
-                    inputsImporter: resolverInputsImporter,
-                    builderCalculatedImport,
-                }),
-                fileLocation
-            );
+            const resloverContent = generateResolver({
+                operationName: operationName,
+                modelName: model.name,
+            });
+            if (resloverContent === null) {
+                debugLog(`Skipping resolver ${operationName}${model.name}`);
+                return;
+            }
+
+            return writePothosFile({
+                content: resloverContent,
+                destination: fileLocation,
+            });
         })
     );
 
     if (resolvers.length)
-        await writePothosFile(
-            config,
-            "crud.model.resolverIndex",
-            // TODO Refactor this logic + tests
-            resolvers
-                .map(
-                    ([name]) =>
-                        `export ${(() => {
-                            return `{ ${name}${model.name}${type === "mutations" ? "Mutation" : "Query"}, ${name}${
-                                model.name
-                            }${getResolverTypeName(type)}Object }`;
-                        })()} from './${name}.base';`
-                )
-                .join("\n") + "\n",
-            path.join(config.crud.outputDir, model.name, type, "index.ts")
-        );
+        await writePothosFile({
+            content:
+                resolvers
+                    .map(
+                        ([name]) =>
+                            `export ${(() => {
+                                return `{ ${name}${model.name}${type === "mutations" ? "Mutation" : "Query"}, ${name}${
+                                    model.name
+                                }${getResolverTypeName(type)}Object }`;
+                            })()} from './${name}.base';`
+                    )
+                    .join("\n") + "\n",
+            destination: path.join(
+                config.crud.outputDir,
+                model.name,
+                type,
+                "index.ts"
+            ),
+        });
 
     return resolvers.map(([resolverName]) => ({
         resolverName,

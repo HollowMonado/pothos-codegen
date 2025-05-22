@@ -1,7 +1,22 @@
 import type { DMMF } from "@prisma/generator-helper";
+import {
+    makeCreateMany,
+    makeCreateOne,
+    makeDeleteMany,
+    makeDeleteOne,
+    makeUpdateMany,
+    makeUpdateOne,
+    makeUpsertOne,
+    mutationOperationNames,
+} from "crudGenerator/templates/mutation.js";
+import {
+    makeCount,
+    makeFindFirst,
+    makeFindMany,
+    makeFindUnique,
+    queryOperationNames,
+} from "crudGenerator/templates/query.js";
 import { ConfigInternal } from "utils/config.js";
-import { mutations as MutationTemplates } from "../templates/mutation";
-import { queries as QueryTemplates } from "../templates/query";
 import {
     GeneratedResolver,
     writeIndex,
@@ -9,9 +24,47 @@ import {
     writeResolvers,
 } from "./parts";
 
-/**
- * @returns List of generated resolvers
- */
+export const allOperationNames = [
+    ...queryOperationNames,
+    ...mutationOperationNames,
+] as const;
+export type AllOperation = (typeof allOperationNames)[number];
+
+export function generateResolver({
+    operationName,
+    modelName,
+}: {
+    operationName: AllOperation;
+    modelName: string;
+}) {
+    switch (operationName) {
+        case "findFirst":
+            return makeFindFirst({ modelName });
+        case "findMany":
+            return makeFindMany({ modelName });
+        case "count":
+            return makeCount({ modelName });
+        case "findUnique":
+            return makeFindUnique({ modelName });
+        case "createMany":
+            return makeCreateMany({ modelName });
+        case "createOne":
+            return makeCreateOne({ modelName });
+        case "deleteMany":
+            return makeDeleteMany({ modelName });
+        case "deleteOne":
+            return makeDeleteOne({ modelName });
+        case "updateMany":
+            return makeUpdateMany({ modelName });
+        case "updateOne":
+            return makeUpdateOne({ modelName });
+        case "upsertOne":
+            return makeUpsertOne({ modelName });
+        default:
+            return null;
+    }
+}
+
 export async function generateModel(
     config: ConfigInternal,
     dmmf: DMMF.Document,
@@ -25,18 +78,12 @@ export async function generateModel(
 
     await writeObject(config, model);
 
-    const queries = await writeResolvers(
-        config,
-        model,
-        "queries",
-        QueryTemplates
-    );
-    const mutations = await writeResolvers(
-        config,
-        model,
-        "mutations",
-        MutationTemplates
-    );
+    const queries = await writeResolvers({
+        config: config,
+        model: model,
+        type: "queries",
+    });
+    const mutations = await writeResolvers(config, model, "mutations");
     const index = await writeIndex(config, model, { queries, mutations });
 
     return { resolvers: [...queries, ...mutations], index };

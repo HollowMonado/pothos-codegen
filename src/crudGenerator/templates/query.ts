@@ -1,6 +1,12 @@
 import { firstLetterLowerCase } from "utils/string.js";
 
-export type QueryOperation = "findFirst" | "findMany" | "count" | "findUnique";
+export const queryOperationNames = [
+    "findFirst",
+    "findMany",
+    "count",
+    "findUnique",
+] as const;
+export type QueryOperation = (typeof queryOperationNames)[number];
 
 function makeQueryTemplate({
     queryOperation,
@@ -43,13 +49,13 @@ function makeQueryArgsTemplate({ modelName }: { modelName: string }) {
 }
 
 function makeQueryResloverTemplate({
-    prismaName,
+    prismaCaller,
     isPrisma,
     modelName,
     operation,
     hasDistinct,
 }: {
-    prismaName: string;
+    prismaCaller: string;
     isPrisma: boolean;
     modelName: string;
     operation: QueryOperation;
@@ -61,7 +67,7 @@ function makeQueryResloverTemplate({
     const query = isPrisma ? "\n...query" : "";
 
     return `async (${queryArg}_root, args, _context, _info) =>
-      await ${prismaName}.${modelNameLower}.${operation}({
+      await ${prismaCaller}.${modelNameLower}.${operation}({
         where: args.where || undefined,
         cursor: args.cursor || undefined,
         take: args.take || undefined,${hasDistinct ? "distinct: args.distinct || undefined," : ""}
@@ -75,16 +81,16 @@ function makeFindUniqueArgsTemplate({ modelName }: { modelName: string }) {
 }
 
 function makeFindUniqueResloverTemplate({
-    prismaName,
+    prismaCaller,
     modelName,
 }: {
-    prismaName: string;
+    prismaCaller: string;
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
 
     return `async (query, _root, args, _context, _info) =>
-      await ${prismaName}.${modelNameLower}.findUnique({ where: args.where, ...query })`;
+      await ${prismaCaller}.${modelNameLower}.findUnique({ where: args.where, ...query })`;
 }
 
 export function makeFindFirst({ modelName }: { modelName: string }) {
@@ -95,7 +101,7 @@ export function makeFindFirst({ modelName }: { modelName: string }) {
         type: "'#{modelName}'",
         nullable: false,
         resolve: makeQueryResloverTemplate({
-            prismaName: "prisma",
+            prismaCaller: "prisma",
             isPrisma: true,
             modelName,
             operation: "findFirst",
@@ -112,7 +118,7 @@ export function makeFindMany({ modelName }: { modelName: string }) {
         type: "['#{modelName}']",
         nullable: true,
         resolve: makeQueryResloverTemplate({
-            prismaName: "prisma",
+            prismaCaller: "prisma",
             isPrisma: true,
             modelName,
             operation: "findMany",
@@ -129,7 +135,7 @@ export function makeFindUnique({ modelName }: { modelName: string }) {
         type: "'#{modelName}'",
         nullable: true,
         resolve: makeFindUniqueResloverTemplate({
-            prismaName: "prisma",
+            prismaCaller: "prisma",
             modelName: modelName,
         }),
     });
@@ -143,7 +149,7 @@ export function makeCount({ modelName }: { modelName: string }) {
         type: "'Int'",
         nullable: false,
         resolve: makeQueryResloverTemplate({
-            prismaName: "prisma",
+            prismaCaller: "prisma",
             isPrisma: false,
             modelName,
             operation: "count",

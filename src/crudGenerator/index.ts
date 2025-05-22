@@ -1,9 +1,7 @@
 import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
-import { getConfigCrudUnderscore } from "utils/configUtils.js";
 import { deleteFolder, writePothosFile } from "utils/filesystem.js";
-import { useTemplate } from "utils/template.js";
 import {
     autoCrudTemplate,
     objectsTemplate,
@@ -16,10 +14,9 @@ export async function generateCrud(
     config: ConfigInternal,
     dmmf: DMMF.Document
 ): Promise<void> {
-    if (config.crud.disabled) return;
-
-    if (config.crud.deleteOutputDirBeforeGenerate)
+    if (config.crud.deleteOutputDirBeforeGenerate) {
         await deleteFolder(path.join(config.crud.outputDir));
+    }
 
     const modelNames = dmmf.datamodel.models.map((model) => model.name);
 
@@ -53,14 +50,12 @@ export async function generateCrud(
         config,
         "crud.objects",
         useTemplate(objectsTemplate, {
-            crudExportRoot: config.crud.exportEverythingInObjectsDotTs
-                ? `\n${exportAllInObjects
-                      .map(
-                          (el) =>
-                              `export {\n  ${el.exports.join(",\n  ")}\n} from './${el.model}';`
-                      )
-                      .join("\n")}`
-                : "",
+            crudExportRoot: `\n${exportAllInObjects
+                .map(
+                    (el) =>
+                        `export {\n  ${el.exports.join(",\n  ")}\n} from './${el.model}';`
+                )
+                .join("\n")}`,
             ...config.crud,
             modelNames: modelNamesEachLine,
             builderCalculatedImport: builderCalculatedImportObjects,
