@@ -44,7 +44,7 @@ export interface Config {
     /** Global config */
     global?: {
         /** Location of builder. Default: './builder', */
-        builderImporter?: string;
+        builderImportPath?: string;
     };
 }
 
@@ -81,7 +81,7 @@ export async function parseConfig({
     configPath: string;
 }): Promise<Config> {
     const importedFile = await import(configPath); // throw error if dont exist
-    const { crud, global, inputs }: Config = importedFile || {};
+    const { crud, global, inputs }: Config = importedFile.default || {};
 
     return { crud, global, inputs };
 }
@@ -95,7 +95,7 @@ export function getDefaultConfig(): ConfigInternal {
             mapIdFieldsToGraphqlId: false,
         },
         crud: {
-            inputsImporter: `import * as Inputs from '../inputs';`,
+            inputsImporter: `import * as Inputs from '../inputs.js';`,
             prismaImporter: `import { Prisma } from '.prisma/client';`,
             prismaCaller: "context.prisma",
             resolverImports: "",
@@ -108,7 +108,7 @@ export function getDefaultConfig(): ConfigInternal {
             mapIdFieldsToGraphqlId: "Objects",
         },
         global: {
-            builderImporter: "./builder",
+            builderImportPath: "./builder",
         },
     };
 }

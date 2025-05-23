@@ -1,13 +1,13 @@
 export function makeObjectsFileTemplate({
     prismaImporter,
-    builderImporter,
+    builderImportPath,
     modelNames,
 }: {
     prismaImporter: string;
-    builderImporter: string;
+    builderImportPath: string;
     modelNames: string;
 }) {
-    return `${prismaImporter}${builderImporter}
+    return `${prismaImporter}${builderImportPath}
 
 export const BatchPayload = builder.objectType(builder.objectRef<Prisma.BatchPayload>('BatchPayload'), {
   description: 'Batch payloads from prisma.',
@@ -36,7 +36,8 @@ import {
     PrismaModelTypes,
     PrismaObjectTypeOptions,
     RelatedFieldOptions,
-} from "@pothos/plugin-prisma";${builderImport}
+} from "@pothos/plugin-prisma";
+import {builder} from "${builderImport}";
 
 type Types = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
 
@@ -174,15 +175,15 @@ export type MutationPrismaObject = GeneralPrismaObject<"Mutation">;
 
 export function makeAutoCrudFileTemplate({
     imports,
-    builderImporter,
+    builderImportPath,
     modelsGenerated,
 }: {
     imports: string;
-    builderImporter: string;
+    builderImportPath: string;
     modelsGenerated: string;
 }) {
     //TODO: remove any
-    return `${imports}${builderImporter}
+    return `${imports}${builderImportPath}
 import * as Objects from './objects';
 
 type Model = Objects.Model;

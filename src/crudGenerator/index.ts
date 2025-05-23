@@ -96,7 +96,7 @@ async function generateAutocrudFile({
     const fileLocation = path.join(config.crud.outputDir, "autocrud.ts");
     await writePothosFile({
         content: makeAutoCrudFileTemplate({
-            builderImporter: config.global.builderImporter,
+            builderImportPath: config.global.builderImportPath,
             imports: imports,
             modelsGenerated: modelsGenerated,
         }),
@@ -116,7 +116,7 @@ async function generateUtilsFile({
 
     await writePothosFile({
         content: makeUtilsTemplate({
-            builderImport: config.global.builderImporter,
+            builderImport: config.global.builderImportPath,
         }),
         destination: fileLocation,
     });
@@ -139,7 +139,7 @@ async function generateObjectsFile({
     await writePothosFile({
         content: makeObjectsFileTemplate({
             prismaImporter: config.crud.prismaImporter,
-            builderImporter: config.global.builderImporter,
+            builderImportPath: config.global.builderImportPath,
             modelNames: modelNamesEachLine,
         }),
         destination: fileLocationObjects,

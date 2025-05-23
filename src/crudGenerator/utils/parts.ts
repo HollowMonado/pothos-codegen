@@ -116,6 +116,7 @@ export async function writeResolvers({
             );
 
             const resloverContent = generateResolver({
+                config: config,
                 operationName: operationName,
                 modelName: model.name,
             });

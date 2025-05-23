@@ -31,9 +31,11 @@ export const allOperationNames = [
 export type AllOperation = (typeof allOperationNames)[number];
 
 export function generateResolver({
+    config,
     operationName,
     modelName,
 }: {
+    config: ConfigInternal;
     operationName: AllOperation;
     modelName: string;
 }) {
@@ -47,19 +49,19 @@ export function generateResolver({
         case "findUnique":
             return makeFindUnique({ modelName });
         case "createMany":
-            return makeCreateMany({ modelName });
+            return makeCreateMany({ config, modelName });
         case "createOne":
-            return makeCreateOne({ modelName });
+            return makeCreateOne({ config, modelName });
         case "deleteMany":
-            return makeDeleteMany({ modelName });
+            return makeDeleteMany({ config, modelName });
         case "deleteOne":
-            return makeDeleteOne({ modelName });
+            return makeDeleteOne({ config, modelName });
         case "updateMany":
-            return makeUpdateMany({ modelName });
+            return makeUpdateMany({ config, modelName });
         case "updateOne":
-            return makeUpdateOne({ modelName });
+            return makeUpdateOne({ config, modelName });
         case "upsertOne":
-            return makeUpsertOne({ modelName });
+            return makeUpsertOne({ config, modelName });
         default:
             return null;
     }

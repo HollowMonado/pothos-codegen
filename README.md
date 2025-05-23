@@ -191,7 +191,7 @@ module.exports = {
     /** A function to replace generated source */
     replacer?: Replacer;
     /** Location of builder to replace in all files. Relative to package root. ie: './src/schema/builder'. Default: './builder' */
-    builderImporter?: string;
+    builderImportPath?: string;
     /** Run function before generate */
     beforeGenerate?: (dmmf: DMMF.Document) => void;
     /** Run function after generate */
