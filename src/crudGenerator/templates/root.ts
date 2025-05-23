@@ -1,4 +1,13 @@
-export const objectsTemplate = `#{prismaImporter}#{crudExportRoot}#{builderCalculatedImport}
+export function makeObjectsFileTemplate({
+    prismaImporter,
+    builderImporter,
+    modelNames,
+}: {
+    prismaImporter: string;
+    builderImporter: string;
+    modelNames: string;
+}) {
+    return `${prismaImporter}${builderImporter}
 
 export const BatchPayload = builder.objectType(builder.objectRef<Prisma.BatchPayload>('BatchPayload'), {
   description: 'Batch payloads from prisma.',
@@ -8,20 +17,26 @@ export const BatchPayload = builder.objectType(builder.objectRef<Prisma.BatchPay
 });
 
 export const modelNames = [
-  #{modelNames}
+  ${modelNames}
 ] as const;
 
 export type Model = typeof modelNames[number];
 `;
+}
 
-export const utilsTemplate = `
+export function makeUtilsTemplate({
+    builderImport,
+}: {
+    builderImport: string;
+}) {
+    return `
 import { FieldKind, FieldOptionsFromKind, InputFieldMap, InterfaceParam, ObjectRef, TypeParam } from "@pothos/core";
 import {
     PrismaFieldOptions,
     PrismaModelTypes,
     PrismaObjectTypeOptions,
     RelatedFieldOptions,
-} from "@pothos/plugin-prisma";#{builderCalculatedImport}
+} from "@pothos/plugin-prisma";${builderImport}
 
 type Types = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
 
@@ -136,6 +151,7 @@ export type QueryPrismaObject = GeneralPrismaObject<"Query">;
 export type MutationPrismaObject = GeneralPrismaObject<"Mutation">;
 
 `;
+}
 
 // TODO: Refactor getParams to link model with object base, and remove any
 /**
@@ -155,7 +171,18 @@ export type MutationPrismaObject = GeneralPrismaObject<"Mutation">;
     },
   },
  */
-export const autoCrudTemplate = `#{imports}#{builderCalculatedImport}
+
+export function makeAutoCrudFileTemplate({
+    imports,
+    builderImporter,
+    modelsGenerated,
+}: {
+    imports: string;
+    builderImporter: string;
+    modelsGenerated: string;
+}) {
+    //TODO: remove any
+    return `${imports}${builderImporter}
 import * as Objects from './objects';
 
 type Model = Objects.Model;
@@ -168,7 +195,7 @@ export const Cruds: Record<
     mutations: Record<string, Function>;
   }
 > = {
-#{modelsGenerated}
+${modelsGenerated}
 };
 
 const crudEntries = Object.entries(Cruds);
@@ -265,3 +292,4 @@ export function generateAllCrud(opts?: CrudOptions) {
   generateAllMutations(opts);
 }
 `;
+}
