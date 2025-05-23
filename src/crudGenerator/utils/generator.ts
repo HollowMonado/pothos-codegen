@@ -83,8 +83,12 @@ export async function generateModel(
         model: model,
         type: "queries",
     });
-    const mutations = await writeResolvers(config, model, "mutations");
-    const index = await writeIndex(config, model, { queries, mutations });
+    const mutations = await writeResolvers({
+        config,
+        model,
+        type: "mutations",
+    });
+    const index = await writeIndex({ config, model });
 
     return { resolvers: [...queries, ...mutations], index };
 }

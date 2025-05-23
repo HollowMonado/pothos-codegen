@@ -1,7 +1,9 @@
-import { GeneratorOptions, generatorHandler } from "@prisma/generator-helper";
+import generatorHelper, { GeneratorOptions } from "@prisma/generator-helper";
 import { generateCrud } from "./crudGenerator/index.js";
 import { generateInputs } from "./inputsGenerator/index.js";
 import { getConfig } from "./utils/config.js";
+
+const { generatorHandler } = generatorHelper;
 
 // Types from the generator, in `schema.prisma`
 type SchemaGeneratorExtensionOptions = { generatorConfigPath?: string };
@@ -21,9 +23,11 @@ generatorHandler({
             ...options,
             ...options.generator.config,
         };
-        const config = await getConfig(generatorConfig);
+        const config = await getConfig({
+            extendedGeneratorOptions: generatorConfig,
+        });
 
-        await generateCrud(config, options.dmmf);
-        await generateInputs(config, options.dmmf);
+        await generateCrud({ config, dmmf: options.dmmf });
+        await generateInputs({ config, dmmf: options.dmmf });
     },
 });

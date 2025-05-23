@@ -138,8 +138,6 @@ module.exports = {
 {
   /** Input type generation config */
   inputs?: {
-    /** Create simpler inputs for easier customization and ~65% less generated code. Default: `false` */
-    simple?: boolean;
     /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
     prismaImporter?: string;
     /** Path to generate the inputs file to from project root. Default: `'./generated/inputs.ts'` */
@@ -161,7 +159,7 @@ module.exports = {
     inputsImporter?: string;
     /** How to import the Prisma namespace at the objects.ts file. Default `"import { Prisma } from '.prisma/client';"`. Please use "resolverImports" to import prismaClient at resolvers. */
     prismaImporter?: string;
-    /** How to call the prisma client. Default `'_context.prisma'` */
+    /** How to call the prisma client. Default `'context.prisma'` */
     prismaCaller?: string;
     /** Any additional imports you might want to add to the resolvers (e.g. your prisma client). Default: `''` */
     resolverImports?: string;

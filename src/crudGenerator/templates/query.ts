@@ -66,7 +66,7 @@ function makeQueryResloverTemplate({
     const queryArg = isPrisma ? "query" : "";
     const query = isPrisma ? "\n...query" : "";
 
-    return `async (${queryArg}_root, args, _context, _info) =>
+    return `async (${queryArg}_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.${operation}({
         where: args.where || undefined,
         cursor: args.cursor || undefined,
@@ -89,7 +89,7 @@ function makeFindUniqueResloverTemplate({
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
 
-    return `async (query, _root, args, _context, _info) =>
+    return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.findUnique({ where: args.where, ...query })`;
 }
 

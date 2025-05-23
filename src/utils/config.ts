@@ -22,7 +22,7 @@ export interface Config {
         inputsImporter?: string;
         /** How to import the Prisma namespace at the objects.ts file. Default `"import { Prisma } from '.prisma/client';"`. Please use "resolverImports" to import prismaClient at resolvers. */
         prismaImporter?: string;
-        /** How to call the prisma client. Default `'_context.prisma'` */
+        /** How to call the prisma client. Default `'context.prisma'` */
         prismaCaller?: string;
         /** TODO: Any additional imports you might want to add to the resolvers (e.g. your prisma client). Default: `''` */
         resolverImports?: string;
@@ -56,13 +56,13 @@ export type ConfigInternal = {
 };
 
 /** Parses the configuration file path */
-export const getConfigPath = ({
+export function getConfigPath({
     generatorConfigPath,
     schemaPath,
 }: {
     generatorConfigPath?: string;
     schemaPath: string;
-}): string | undefined => {
+}): string | undefined {
     const envConfigPath = process.env.POTHOS_CRUD_CONFIG_PATH;
     const configPath = envConfigPath || generatorConfigPath; // use env var if set
 
@@ -72,72 +72,64 @@ export const getConfigPath = ({
     const optionsPath = path.join(schemaDirName, configPath);
 
     return optionsPath;
-};
+}
 
 /** Parses the configuration file based on the provided schema and config paths */
-export const parseConfig = async (configPath: string): Promise<Config> => {
+export async function parseConfig({
+    configPath,
+}: {
+    configPath: string;
+}): Promise<Config> {
     const importedFile = await import(configPath); // throw error if dont exist
     const { crud, global, inputs }: Config = importedFile || {};
 
     return { crud, global, inputs };
-};
+}
 
-export const getDefaultConfig: (
-    global?: Config["global"]
-) => ConfigInternal = () => ({
-    inputs: {
-        simple: false,
-        prismaImporter: `import { Prisma } from '.prisma/client';`,
-        outputFilePath: "./generated/inputs.ts",
-        excludeScalars: [],
-        replacer: (str: string) => str,
-        mapIdFieldsToGraphqlId: false,
-    },
-    crud: {
-        disabled: false,
-        inputsImporter: `import * as Inputs from '../inputs';`,
-        prismaImporter: `import { Prisma } from '.prisma/client';`,
-        prismaCaller: "_context.prisma",
-        resolverImports: "",
-        outputDir: "./generated",
-        replacer: (str: string) => str,
-        generateAutocrud: true,
-        excludeResolversContain: [],
-        excludeResolversExact: [],
-        includeResolversContain: [],
-        includeResolversExact: [],
-        deleteOutputDirBeforeGenerate: false,
-        exportEverythingInObjectsDotTs: true,
-        mapIdFieldsToGraphqlId: "Objects",
-        underscoreBetweenObjectVariableNames: false,
-    },
-    global: {
-        replacer: (str: string) => str,
-        builderImporter: "./builder",
-        beforeGenerate: () => {
-            // noop
+export function getDefaultConfig(): ConfigInternal {
+    return {
+        inputs: {
+            prismaImporter: `import { Prisma } from '.prisma/client';`,
+            outputFilePath: "./generated/inputs.ts",
+            excludeScalars: [],
+            mapIdFieldsToGraphqlId: false,
         },
-        afterGenerate: () => {
-            // noop
+        crud: {
+            inputsImporter: `import * as Inputs from '../inputs';`,
+            prismaImporter: `import { Prisma } from '.prisma/client';`,
+            prismaCaller: "context.prisma",
+            resolverImports: "",
+            outputDir: "./generated",
+            excludeResolversContain: [],
+            excludeResolversExact: [],
+            includeResolversContain: [],
+            includeResolversExact: [],
+            deleteOutputDirBeforeGenerate: false,
+            mapIdFieldsToGraphqlId: "Objects",
         },
-    },
-});
+        global: {
+            builderImporter: "./builder",
+        },
+    };
+}
 
 /** Receives the config path from generator options, loads the config from file, fills out the default values, and returns it */
-export const getConfig = async (
-    extendedGeneratorOptions: ExtendedGeneratorOptions
-): Promise<ConfigInternal> => {
+export async function getConfig({
+    extendedGeneratorOptions,
+}: {
+    extendedGeneratorOptions: ExtendedGeneratorOptions;
+}): Promise<ConfigInternal> {
     const { generatorConfigPath, schemaPath } = extendedGeneratorOptions;
     const configPath = getConfigPath({ generatorConfigPath, schemaPath });
 
     if (!configPath) return getDefaultConfig();
 
-    const { inputs, crud, global } = await parseConfig(configPath);
-    const defaultConfig = getDefaultConfig(global);
+    const { inputs, crud, global } = await parseConfig({ configPath });
+    const defaultConfig = getDefaultConfig();
 
     return {
         inputs: { ...defaultConfig.inputs, ...inputs },
         crud: { ...defaultConfig.crud, ...crud },
         global: { ...defaultConfig.global, ...global },
     } satisfies ConfigInternal;
-};
+}

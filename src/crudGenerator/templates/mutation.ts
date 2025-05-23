@@ -80,7 +80,7 @@ function makeCreateManyResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (_mutation, _root, args, _context, _info) =>
+    return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.$transaction(args.data.map((data) => ${prismaCaller}.${modelNameLower}.create({ data })))`;
 }
 function makeCreateOneResolverTemplate({
@@ -91,8 +91,8 @@ function makeCreateOneResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (mutation, _root, args, _context, _info) =>
-      await ${prismaCaller}.${modelNameLower}.create({ data: args.data, ...mutation })`;
+    return `async (query, _root, args, context, _info) =>
+      await ${prismaCaller}.${modelNameLower}.create({ data: args.data, ...query })`;
 }
 
 function makeDeleteManyResolverTemplate({
@@ -103,7 +103,7 @@ function makeDeleteManyResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (_root, args, _context, _info) =>
+    return `async (_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.deleteMany({ where: args.where })`;
 }
 function makeDeleteOneResolverTemplate({
@@ -114,8 +114,8 @@ function makeDeleteOneResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (mutation, _root, args, _context, _info) =>
-      await ${prismaCaller}.${modelNameLower}.delete({ where: args.where, ...mutation })`;
+    return `async (query, _root, args, context, _info) =>
+      await ${prismaCaller}.${modelNameLower}.delete({ where: args.where, ...query })`;
 }
 function makeUpdateManyResolverTemplate({
     prismaCaller,
@@ -125,7 +125,7 @@ function makeUpdateManyResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (_root, args, _context, _info) =>
+    return `async (_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.updateMany({ where: args.where || undefined, data: args.data })`;
 }
 function makeUpdateOneResolverTemplate({
@@ -136,8 +136,8 @@ function makeUpdateOneResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (mutation, _root, args, _context, _info) =>
-      await ${prismaCaller}.${modelNameLower}.update({ where: args.where, data: args.data, ...mutation })`;
+    return `async (query, _root, args, context, _info) =>
+      await ${prismaCaller}.${modelNameLower}.update({ where: args.where, data: args.data, ...query })`;
 }
 function makeUpsertOneResolverTemplate({
     prismaCaller,
@@ -147,12 +147,12 @@ function makeUpsertOneResolverTemplate({
     modelName: string;
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
-    return `async (mutation, _root, args, _context, _info) =>
+    return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.upsert({
         where: args.where,
         create: args.create,
         update: args.update,
-        ...mutation,
+        ...query,
       })`;
 }
 

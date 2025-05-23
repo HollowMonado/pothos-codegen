@@ -138,7 +138,13 @@ function makeInputs({
         .join("\n\n");
 }
 
-export function getInputs(config: ConfigInternal, dmmf: DMMF.Document) {
+export function getInputs({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}) {
     // Map from possible input names to their related model
     const inputNames = dmmf.datamodel.models.reduce(
         (prev, curr) => {

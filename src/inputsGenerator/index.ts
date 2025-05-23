@@ -21,26 +21,27 @@ export type Scalars<DecimalType, JsonInput, JsonOutput> = {
     NEVER: { Input: void; Output: void };
 };
 
-export async function generateInputs(
-    config: ConfigInternal,
-    dmmf: DMMF.Document
-): Promise<void> {
+export async function generateInputs({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}): Promise<void> {
     if (env.isTesting)
-        await writePothosFile(
-            config,
-            "debug.dmmf",
-            JSON.stringify(dmmf, null, 2),
-            "dmmf.json"
-        );
+        await writePothosFile({
+            content: JSON.stringify(dmmf, null, 2),
+            destination: "dmmf.json",
+        });
 
     const fileLocation = config.inputs.outputFilePath;
 
-    const imports = getImports(config, fileLocation);
+    const imports = getImports({ config });
     const util = getUtil();
-    const scalars = getScalars(config, dmmf);
-    const enums = getEnums(dmmf);
-    const inputs = getInputs(config, dmmf);
+    const scalars = getScalars({ config, dmmf });
+    const enums = getEnums({ dmmf });
+    const inputs = getInputs({ config, dmmf });
     const content = [imports, util, scalars, enums, inputs].join("\n\n");
 
-    await writePothosFile(config, "inputs", content, fileLocation);
+    await writePothosFile({ content: content, destination: fileLocation });
 }

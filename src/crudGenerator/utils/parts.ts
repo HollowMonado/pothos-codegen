@@ -19,7 +19,13 @@ export type GeneratedResolver = {
 };
 
 /** Write index.ts */
-export async function writeIndex(config: ConfigInternal, model: DMMF.Model) {
+export async function writeIndex({
+    config,
+    model,
+}: {
+    config: ConfigInternal;
+    model: DMMF.Model;
+}) {
     const outputPath = path.join(config.crud.outputDir, model.name, "index.ts");
     await writePothosFile({
         content: `export * from "./mutations";
