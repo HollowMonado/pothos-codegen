@@ -1,15 +1,8 @@
 import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
-import { getConfigCrudUnderscore } from "utils/configUtils.js";
 import { debugLog, writePothosFile } from "utils/filesystem.js";
-import { useTemplate } from "utils/template.js";
-import {
-    escapeQuotesAndMultilineSupport,
-    firstLetterUpperCase,
-    getCompositeName,
-} from "../../utils/string";
-import { objectTemplate } from "../templates/object.js";
+import { makeObjectTemplate } from "../templates/object.js";
 import { allOperationNames, generateResolver } from "./generator.js";
 import { getObjectFieldsString } from "./objectFields.js";
 
@@ -26,62 +19,14 @@ export type GeneratedResolver = {
 };
 
 /** Write index.ts */
-export async function writeIndex(
-    config: ConfigInternal,
-    model: DMMF.Model,
-    {
-        queries,
-        mutations,
-    }: { queries: GeneratedResolver[]; mutations: GeneratedResolver[] }
-) {
-    const queriesExports = queries.map(
-        (el) =>
-            `${el.resolverName}${el.modelName}${getResolverTypeName(el.type)}`
-    );
-    const mutationsExports = mutations.map(
-        (el) =>
-            `${el.resolverName}${el.modelName}${getResolverTypeName(el.type)}`
-    );
-    const optionalUnderscore = getConfigCrudUnderscore(config);
-
-    const exportsWithName = [
-        {
-            name: "./object.base",
-            exports: [
-                `${model.name}${optionalUnderscore}Object`,
-                ...model.fields.map(
-                    (el) =>
-                        `${model.name}${optionalUnderscore}${firstLetterUpperCase(el.name)}${optionalUnderscore}FieldObject`
-                ),
-            ],
-        },
-        {
-            name: "./mutations",
-            exports: [
-                ...mutationsExports,
-                ...mutationsExports.map((el) => `${el}Object`),
-            ],
-        },
-        {
-            name: "./queries",
-            exports: [
-                ...queriesExports,
-                ...queriesExports.map((el) => `${el}Object`),
-            ],
-        },
-    ];
-
-    // TODO Refactor this logic + tests
-    const exports = exportsWithName
-        .filter((el) => el.exports.length)
-        .map(
-            (el) =>
-                `export {\n  ${el.exports.join(",\n  ")}\n} from '${el.name}';`
-        );
+export async function writeIndex(config: ConfigInternal, model: DMMF.Model) {
     const outputPath = path.join(config.crud.outputDir, model.name, "index.ts");
-    const content = exports.join("\n") + "\n";
-    await writePothosFile(config, "crud.model.index", content, outputPath);
-    return exportsWithName;
+    await writePothosFile({
+        content: `export * from "./mutations";
+export * from "./object.base";
+export * from "./queries";`,
+        destination: outputPath,
+    });
 }
 
 /** Write object.base.ts */
@@ -89,51 +34,29 @@ export async function writeObject(
     config: ConfigInternal,
     model: DMMF.Model
 ): Promise<void> {
-    // findUnique
-    const idField = model.fields.find((f) => f.isId);
-    let findUnique = `(fields) => ({ ...fields })`;
-    if (idField) findUnique = `({ ${idField.name} }) => ({ ${idField.name} })`;
-    if (model.primaryKey?.fields)
-        findUnique = `(fields) => ({ ${model.primaryKey.name || getCompositeName(model.primaryKey.fields)}: fields })`;
-
     // Fields
-    const { fields, exportFields } = getObjectFieldsString(
-        model.name,
-        model.fields,
-        config
-    );
+    const { fields } = getObjectFieldsString({
+        modelName: model.name,
+        dmmfFields: model.fields,
+    });
 
     const fileLocation = path.join(
         config.crud.outputDir,
         model.name,
         "object.base.ts"
     );
-    const builderCalculatedImport = getBuilderCalculatedImport({
-        config,
-        fileLocation,
-    });
 
     // Write output
-    await writePothosFile(
-        config,
-        "crud.model.object",
-        useTemplate(objectTemplate, {
+    await writePothosFile({
+        content: makeObjectTemplate({
             modelName: model.name,
-            description:
-                escapeQuotesAndMultilineSupport(model.documentation) ||
-                "undefined", // Object description defined in schema.prisma
-            findUnique,
-            inputsImporter: config.crud.inputsImporter,
-            fields: fields.join("\n    "),
-            exportFields: exportFields.join("\n\n"),
-            builderCalculatedImport,
-            optionalUnderscore: getConfigCrudUnderscore(config),
+            fields: fields.join("\n"),
         }),
-        fileLocation
-    );
+        destination: fileLocation,
+    });
 }
 
-const isExcludedResolver = (options: ConfigInternal, name: string) => {
+function isExcludedResolver(options: ConfigInternal, name: string) {
     const {
         excludeResolversContain,
         excludeResolversExact,
@@ -159,7 +82,7 @@ const isExcludedResolver = (options: ConfigInternal, name: string) => {
         return true;
     }
     return false;
-};
+}
 
 /** Write resolvers (e.g. findFirst, findUnique, createOne, etc) */
 export async function writeResolvers({

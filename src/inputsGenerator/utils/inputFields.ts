@@ -5,36 +5,18 @@ import { getMainInput } from "./dmmf.js";
 import { parseComment } from "./parser.js";
 
 /** Convert array of fields to a string code representation */
-export const getInputFieldsString = (
-    input: DMMF.InputType,
-    model: DMMF.Model | undefined,
-    config: ConfigInternal
-): string => {
+export function getInputFieldsString({
+    input,
+    model,
+    config,
+}: {
+    input: DMMF.InputType;
+    model: DMMF.Model | undefined;
+    config: ConfigInternal;
+}): string {
     const omitted: { name: string; reason: string }[] = [];
-    const simple = config.inputs.simple;
 
     const filtered = input.fields.filter((field) => {
-        // Fields are filtered for simple mode if this is enabled
-        if (
-            simple &&
-            [
-                "create",
-                "connectOrCreate",
-                "createMany",
-                "upsert",
-                "update",
-                "updateMany",
-                "delete",
-                "deleteMany",
-            ].includes(field.name)
-        ) {
-            omitted.push({
-                name: field.name,
-                reason: "`simple mode: true` found in global config",
-            });
-            return false;
-        }
-
         // Description is parsed for @Pothos.omit() comments and input fields are filtered
         const modelField = model?.fields.find((f) => f.name === field.name);
 
@@ -132,4 +114,4 @@ export const getInputFieldsString = (
     return `${fields.join(sep)}${omitted.length > 0 ? sep : ""}${omitted
         .map((o) => `// '${o.name}' was omitted due to ${o.reason}`)
         .join(sep)}`;
-};
+}

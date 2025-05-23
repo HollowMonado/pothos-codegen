@@ -3,101 +3,73 @@ import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
 import { deleteFolder, writePothosFile } from "utils/filesystem.js";
 import {
-    autoCrudTemplate,
-    objectsTemplate,
-    utilsTemplate,
+    makeAutoCrudFileTemplate,
+    makeObjectsFileTemplate,
+    makeUtilsTemplate,
 } from "./templates/root";
 import { generateModel } from "./utils/generator.js";
-import { getBuilderCalculatedImport } from "./utils/parts.js";
 
-export async function generateCrud(
-    config: ConfigInternal,
-    dmmf: DMMF.Document
-): Promise<void> {
+export async function generateCrud({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}): Promise<void> {
     if (config.crud.deleteOutputDirBeforeGenerate) {
         await deleteFolder(path.join(config.crud.outputDir));
     }
 
-    const modelNames = dmmf.datamodel.models.map((model) => model.name);
-
     // Generate CRUD directories (e.g. User, Comment, ...)
-    const generatedModels = await Promise.all(
+
+    const generatedModels = await generateAllModels({ config, dmmf });
+    await generateUtilsFile({ config, dmmf });
+    await generateObjectsFile({ config, dmmf });
+    await generateAutocrudFile({ generatedModels, config, dmmf });
+}
+
+async function generateAllModels({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}) {
+    const modelNames = dmmf.datamodel.models.map((model) => model.name);
+    return await Promise.all(
         modelNames.map(async (model) => {
             const generated = await generateModel(config, dmmf, model);
             return { model, generated };
         })
     );
-    const exportAllInObjects = generatedModels
-        .map((el) => {
-            return {
-                model: el.model,
-                exports: el.generated.index.map((el) => el.exports).flat(),
-            };
-        })
-        .filter((el) => Boolean(el.exports.length));
+}
 
-    // Generate root objects.ts file (export all models + prisma objects)
-    const modelNamesEachLine = modelNames
-        .map((model) => `'${model}',`)
-        .join("\n  ");
-    const fileLocationObjects = path.join(config.crud.outputDir, "objects.ts");
-    const builderCalculatedImportObjects = getBuilderCalculatedImport({
-        config,
-        fileLocation: fileLocationObjects,
-    });
+async function generateAutocrudFile({
+    config,
+    dmmf,
+    generatedModels,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+    generatedModels: Awaited<ReturnType<typeof generateAllModels>>;
+}) {
+    const imports = dmmf.datamodel.models
+        .map((model) => `import * as ${model.name} from './${model.name}';`)
+        .join("\n");
+    const models = generatedModels.map((el) => ({
+        model: el.model,
+        reslovers: el.generated.resolvers,
+    }));
 
-    await writePothosFile(
-        config,
-        "crud.objects",
-        useTemplate(objectsTemplate, {
-            crudExportRoot: `\n${exportAllInObjects
-                .map(
-                    (el) =>
-                        `export {\n  ${el.exports.join(",\n  ")}\n} from './${el.model}';`
-                )
-                .join("\n")}`,
-            ...config.crud,
-            modelNames: modelNamesEachLine,
-            builderCalculatedImport: builderCalculatedImportObjects,
-        }),
-        fileLocationObjects
-    );
-
-    const fileLocation = path.join(config.crud.outputDir, "utils.ts");
-    const builderCalculatedImport = getBuilderCalculatedImport({
-        config,
-        fileLocation,
-    });
-
-    // Generate root utils.ts file
-    await writePothosFile(
-        config,
-        "crud.utils",
-        useTemplate(utilsTemplate, { builderCalculatedImport }),
-        fileLocation
-    );
-
-    // Generate root autocrud.ts file
-    // TODO REFACTOR AND TESTS
-    if (config.crud.generateAutocrud) {
-        const imports = dmmf.datamodel.models
-            .map((model) => `import * as ${model.name} from './${model.name}';`)
-            .join("\n");
-        const models = generatedModels.map((el) => ({
-            model: el.model,
-            generated: el.generated.resolvers,
-        }));
-
-        const modelsGenerated = dmmf.datamodel.models
-            .map((model) => {
-                const { name } = model;
-                return `  ${name}: {
-    Object: ${name}.${name}${getConfigCrudUnderscore(config)}Object,
+    const modelsGenerated = dmmf.datamodel.models
+        .map((model) => {
+            return `  ${model.name}: {
+    Object: ${model.name}.${model.name}Object,
     queries: ${(() => {
         const queries =
             models
-                .find((el) => el.model === name)
-                ?.generated.filter((el) => el.type === "queries") || [];
+                .find((el) => el.model === model.name)
+                ?.reslovers.filter((el) => el.type === "queries") || [];
         return `{\n${queries
             .map(
                 (el) =>
@@ -108,8 +80,8 @@ export async function generateCrud(
     mutations: ${(() => {
         const mutations =
             models
-                .find((el) => el.model === name)
-                ?.generated.filter((el) => el.type === "mutations") || [];
+                .find((el) => el.model === model.name)
+                ?.reslovers.filter((el) => el.type === "mutations") || [];
         return `{\n${mutations
             .map(
                 (el) =>
@@ -118,25 +90,58 @@ export async function generateCrud(
             .join("\n")}\n    }`;
     })()},
   },`;
-            })
-            .join("\n");
+        })
+        .join("\n");
 
-        const fileLocation = path.join(config.crud.outputDir, "autocrud.ts");
-        const builderCalculatedImport = getBuilderCalculatedImport({
-            config,
-            fileLocation,
-        });
+    const fileLocation = path.join(config.crud.outputDir, "autocrud.ts");
+    await writePothosFile({
+        content: makeAutoCrudFileTemplate({
+            builderImporter: config.global.builderImporter,
+            imports: imports,
+            modelsGenerated: modelsGenerated,
+        }),
+        destination: fileLocation,
+    });
+}
 
-        await writePothosFile(
-            config,
-            "crud.autocrud",
-            useTemplate(autoCrudTemplate, {
-                ...config.crud,
-                imports,
-                modelsGenerated,
-                builderCalculatedImport,
-            }),
-            fileLocation
-        );
-    }
+// Generate root utils.ts file
+async function generateUtilsFile({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}) {
+    const fileLocation = path.join(config.crud.outputDir, "utils.ts");
+
+    await writePothosFile({
+        content: makeUtilsTemplate({
+            builderImport: config.global.builderImporter,
+        }),
+        destination: fileLocation,
+    });
+}
+
+// Generate root objects.ts file (export all models + prisma objects)
+async function generateObjectsFile({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}) {
+    const modelNames = dmmf.datamodel.models.map((model) => model.name);
+    const modelNamesEachLine = modelNames
+        .map((model) => `'${model}',`)
+        .join("\n  ");
+    const fileLocationObjects = path.join(config.crud.outputDir, "objects.ts");
+
+    await writePothosFile({
+        content: makeObjectsFileTemplate({
+            prismaImporter: config.crud.prismaImporter,
+            builderImporter: config.global.builderImporter,
+            modelNames: modelNamesEachLine,
+        }),
+        destination: fileLocationObjects,
+    });
 }

@@ -1,13 +1,3 @@
-export const enumTemplate = `export const #{enumName} = builder.enumType('#{enumName}', {
-  values: #{values} as const,
-});`;
-
-export const inputTemplate = `export const #{inputName} = builder.inputRef<PrismaUpdateOperationsInputFilter<Prisma.#{prismaInputName}>, false>('#{inputName}').implement({
-  fields: (t) => ({
-    #{fields}
-  }),
-});`;
-
 export const dateTimeScalar = `export const DateTime = builder.scalarType('DateTime', {
   parseValue: (value) => {
     try {

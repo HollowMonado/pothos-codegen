@@ -1,12 +1,10 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { getBuilderCalculatedImport } from "crudGenerator/utils/parts.js";
 import { ConfigInternal } from "utils/config.js";
-import { useTemplate } from "utils/template.js";
 import { getUsedScalars } from "./dmmf.js";
 import { getInputFieldsString } from "./inputFields.js";
 import * as T from "./templates";
 
-export const getEnums = (dmmf: DMMF.Document) => {
+export function getEnums({ dmmf }: { dmmf: DMMF.Document }) {
     return [
         ...dmmf.schema.enumTypes.prisma,
         ...dmmf.datamodel.enums.map((el) => ({
@@ -14,27 +12,31 @@ export const getEnums = (dmmf: DMMF.Document) => {
             values: el.values.map(({ name }) => name),
         })),
     ]
-        .map((el) =>
-            useTemplate(T.enumTemplate, {
-                enumName: el.name,
-                values: JSON.stringify(el.values),
-            })
-        )
+        .map((el) => {
+            const enumName = el.name;
+            const enumValues = JSON.stringify(el.values);
+            return `export const ${enumName} = builder.enumType('${enumName}', {
+  values: ${enumValues} as const,
+});`;
+        })
         .join("\n\n");
-};
+}
 
-export const getImports = (config: ConfigInternal, fileLocation: string) =>
-    // Add ts-nocheck command to get rid of "Excessive stack depth comparing types" error.
-    [
-        "// @ts-nocheck",
+export function getImports({ config }: { config: ConfigInternal }) {
+    return [
         config.inputs.prismaImporter,
-        getBuilderCalculatedImport({ config, fileLocation }),
+        `import { builder } from "../builder";`,
     ].join("\n");
+}
 
-export const getScalars = (
-    { inputs: { excludeScalars } }: ConfigInternal,
-    dmmf: DMMF.Document
-) => {
+export function getScalars({
+    config,
+    dmmf,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+}) {
+    const excludeScalars = config.inputs.excludeScalars;
     const usedScalars = getUsedScalars(dmmf.schema.inputObjectTypes.prisma);
     return [
         ...(usedScalars.hasDateTime && !excludeScalars?.includes("DateTime")
@@ -56,9 +58,10 @@ export const getScalars = (
             ? [T.neverScalar]
             : []),
     ].join("\n\n");
-};
+}
 
-export const getUtil = () => `type Filters = {
+export function getUtil() {
+    return `type Filters = {
   string: Prisma.StringFieldUpdateOperationsInput;
   nullableString: Prisma.NullableStringFieldUpdateOperationsInput;
   dateTime: Prisma.DateTimeFieldUpdateOperationsInput;
@@ -88,94 +91,86 @@ type ApplyFilters<InputField> = {
 type PrismaUpdateOperationsInputFilter<T extends object> = {
   [K in keyof T]: [ApplyFilters<T[K]>] extends [never] ? T[K] : ApplyFilters<T[K]>
 };`;
+}
 
-const makeInputs = (
-    config: ConfigInternal,
-    dmmf: DMMF.Document,
-    inputNames: Record<string, DMMF.Model>
-) =>
-    dmmf.schema.inputObjectTypes.prisma
-        // Filter out irrelevant input types
-        .filter(
-            (input) =>
-                ["Filter", "Compound", "UpdateOperations"].some(
-                    (allowedKeyword) => input.name.includes(allowedKeyword)
-                ) ||
-                Object.keys(inputNames).some((inputName) =>
-                    input.name.startsWith(inputName)
-                )
-        )
+function makeInputs({
+    config,
+    dmmf,
+    inputNames,
+}: {
+    config: ConfigInternal;
+    dmmf: DMMF.Document;
+    inputNames: Record<string, DMMF.Model>;
+}) {
+    const prismaInputs = dmmf.schema.inputObjectTypes.prisma;
+    const allowedKeywords = ["Filter", "Compound", "UpdateOperations"];
+    const filteredInputs = prismaInputs.filter((input) => {
+        return (
+            allowedKeywords.some((allowedKeyword) =>
+                input.name.includes(allowedKeyword)
+            ) ||
+            Object.keys(inputNames).some((inputName) =>
+                input.name.startsWith(inputName)
+            )
+        );
+    });
+
+    return filteredInputs
         .map((input) => {
             const model = Object.entries(inputNames).find(([inputName]) =>
                 input.name.startsWith(inputName)
             );
 
-            return useTemplate(T.inputTemplate, {
-                inputName: input.name.replace("Unchecked", ""),
-                prismaInputName: input.name,
-                fields: getInputFieldsString(
-                    input,
-                    model?.[1],
-                    config
-                ).replaceAll("Unchecked", ""),
-            });
+            const inputName = input.name.replace("Unchecked", "");
+            const prismaInputName = input.name;
+            const fields = getInputFieldsString({
+                input: input,
+                model: model?.[1],
+                config: config,
+            }).replaceAll("Unchecked", "");
+
+            return `export const ${inputName} = builder.inputRef<PrismaUpdateOperationsInputFilter<Prisma.${prismaInputName}>, false>('${inputName}').implement({
+  fields: (t) => ({
+    ${fields}
+  }),
+});`;
         })
         .join("\n\n");
+}
 
-export const getInputs = (config: ConfigInternal, dmmf: DMMF.Document) => {
-    if (config.inputs.simple)
-        return makeInputs(
-            config,
-            dmmf,
-            // Map from possible input names to their related model
-            dmmf.datamodel.models.reduce(
-                (prev, curr) => {
-                    return {
+export function getInputs(config: ConfigInternal, dmmf: DMMF.Document) {
+    // Map from possible input names to their related model
+    const inputNames = dmmf.datamodel.models.reduce(
+        (prev, curr) => {
+            return {
+                ...prev,
+                ...[
+                    "Where",
+                    "ScalarWhere",
+                    "Create",
+                    "Update",
+                    "Upsert",
+                    "OrderBy",
+                    "CountOrderBy",
+                    "MaxOrderBy",
+                    "MinOrderBy",
+                    "AvgOrderBy",
+                    "SumOrderBy",
+                ].reduce(
+                    (prev, keyword) => ({
                         ...prev,
-                        [`${curr.name}UncheckedCreateInput`]: curr,
-                        [`${curr.name}CreateNestedManyWithout`]: curr,
-                        [`${curr.name}UncheckedUpdateInput`]: curr,
-                        [`${curr.name}UpdateManyMutationInput`]: curr,
-                        [`${curr.name}UpdateManyWithout`]: curr,
-                        [`${curr.name}OrderByWithRelationInput`]: curr,
-                        [`${curr.name}OrderByRelationAggregateInput`]: curr,
-                        [`${curr.name}Where`]: curr,
-                    };
-                },
-                {} as Record<string, DMMF.Model>
-            )
-        );
-    else
-        return makeInputs(
-            config,
-            dmmf,
-            // Map from possible input names to their related model
-            dmmf.datamodel.models.reduce(
-                (prev, curr) => {
-                    return {
-                        ...prev,
-                        ...[
-                            "Where",
-                            "ScalarWhere",
-                            "Create",
-                            "Update",
-                            "Upsert",
-                            "OrderBy",
-                            "CountOrderBy",
-                            "MaxOrderBy",
-                            "MinOrderBy",
-                            "AvgOrderBy",
-                            "SumOrderBy",
-                        ].reduce(
-                            (prev, keyword) => ({
-                                ...prev,
-                                [`${curr.name}${keyword}`]: curr,
-                            }),
-                            {}
-                        ),
-                    };
-                },
-                {} as Record<string, DMMF.Model>
-            )
-        );
-};
+                        [`${curr.name}${keyword}`]: curr,
+                    }),
+                    {}
+                ),
+            };
+        },
+        {} as Record<string, DMMF.Model>
+    );
+
+    return makeInputs({
+        config: config,
+        dmmf: dmmf,
+        inputNames: inputNames,
+    });
+}
