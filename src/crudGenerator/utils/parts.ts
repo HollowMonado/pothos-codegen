@@ -1,9 +1,11 @@
 import type { DMMF } from "@prisma/generator-helper";
+import { mutationOperationNames } from "crudGenerator/templates/mutation.js";
+import { queryOperationNames } from "crudGenerator/templates/query.js";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
 import { debugLog, writePothosFile } from "utils/filesystem.js";
 import { makeObjectTemplate } from "../templates/object.js";
-import { allOperationNames, generateResolver } from "./generator.js";
+import { generateResolver } from "./generator.js";
 import { getObjectFieldsString } from "./objectFields.js";
 
 type ResolverType = "queries" | "mutations";
@@ -19,13 +21,7 @@ export type GeneratedResolver = {
 };
 
 /** Write index.ts */
-export async function writeIndex({
-    config,
-    model,
-}: {
-    config: ConfigInternal;
-    model: DMMF.Model;
-}) {
+export async function writeIndex({ config, model }: { config: ConfigInternal; model: DMMF.Model }) {
     const outputPath = path.join(config.global.outputDir, model.name, "index.ts");
     await writePothosFile({
         content: `export * from "./mutations";
@@ -36,21 +32,14 @@ export * from "./queries";`,
 }
 
 /** Write object.base.ts */
-export async function writeObject(
-    config: ConfigInternal,
-    model: DMMF.Model
-): Promise<void> {
+export async function writeObject(config: ConfigInternal, model: DMMF.Model): Promise<void> {
     // Fields
     const { fields } = getObjectFieldsString({
         modelName: model.name,
         dmmfFields: model.fields,
     });
 
-    const fileLocation = path.join(
-        config.global.outputDir,
-        model.name,
-        "object.base.ts"
-    );
+    const fileLocation = path.join(config.global.outputDir, model.name, "object.base.ts");
 
     // Write output
     await writePothosFile({
@@ -63,28 +52,19 @@ export async function writeObject(
 }
 
 function isExcludedResolver(options: ConfigInternal, name: string) {
-    const {
-        excludeResolversContain,
-        excludeResolversExact,
-        includeResolversContain,
-        includeResolversExact,
-    } = options.crud || {};
+    const { excludeResolversContain, excludeResolversExact, includeResolversContain, includeResolversExact } =
+        options.crud || {};
     if (includeResolversExact.length) {
         return !includeResolversExact.includes(name);
     }
     if (includeResolversContain.length) {
-        return !includeResolversContain.some((include) =>
-            name.includes(include)
-        );
+        return !includeResolversContain.some((include) => name.includes(include));
     }
 
     if (excludeResolversExact.length && excludeResolversExact.includes(name)) {
         return true;
     }
-    if (
-        excludeResolversContain.length &&
-        excludeResolversContain.some((r) => name.includes(r))
-    ) {
+    if (excludeResolversContain.length && excludeResolversContain.some((r) => name.includes(r))) {
         return true;
     }
     return false;
@@ -100,20 +80,15 @@ export async function writeResolvers({
     model: DMMF.Model;
     type: ResolverType;
 }): Promise<GeneratedResolver[]> {
-    const resolvers = allOperationNames.filter(
-        (operationName) =>
-            !isExcludedResolver(config, `${operationName}${model.name}`)
+    const resolverOperations = type === "mutations" ? mutationOperationNames : queryOperationNames;
+    const resolvers = resolverOperations.filter(
+        (operationName) => !isExcludedResolver(config, `${operationName}${model.name}`)
     );
 
     // Generate files
     await Promise.all(
         resolvers.map((operationName) => {
-            const fileLocation = path.join(
-                config.global.outputDir,
-                model.name,
-                type,
-                `${operationName}.base.ts`
-            );
+            const fileLocation = path.join(config.global.outputDir, model.name, type, `${operationName}.base.ts`);
 
             const resloverContent = generateResolver({
                 config: config,
@@ -145,12 +120,7 @@ export async function writeResolvers({
                             })()} from './${name}.base';`
                     )
                     .join("\n") + "\n",
-            destination: path.join(
-                config.global.outputDir,
-                model.name,
-                type,
-                "index.ts"
-            ),
+            destination: path.join(config.global.outputDir, model.name, type, "index.ts"),
         });
 
     return resolvers.map(([resolverName]) => ({

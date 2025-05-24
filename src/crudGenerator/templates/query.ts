@@ -35,7 +35,7 @@ import { builder } from '${builderImportPath}';
 
 export const ${queryOperation}${modelName}QueryArgs = builder.args((t) => (${argsReturn}))
 
-export const ${queryOperation}${modelName}QueryObject: QueryPrismaObject = {
+export const ${queryOperation}${modelName}QueryObject: ${objectType} = {
   type: ${type},
   nullable: ${nullable},
   args: ${queryOperation}${modelName}QueryArgs,
@@ -103,7 +103,7 @@ export function makeFindFirst({ config, modelName }: { config: ConfigInternal; m
         type: "'#{modelName}'",
         nullable: false,
         resolve: makeQueryResloverTemplate({
-            prismaCaller: "prisma",
+            prismaCaller: config.crud.prismaCaller,
             isPrisma: true,
             modelName,
             operation: "findFirst",
@@ -121,7 +121,7 @@ export function makeFindMany({ config, modelName }: { config: ConfigInternal; mo
         type: "['#{modelName}']",
         nullable: true,
         resolve: makeQueryResloverTemplate({
-            prismaCaller: "prisma",
+            prismaCaller: config.crud.prismaCaller,
             isPrisma: true,
             modelName,
             operation: "findMany",
@@ -139,7 +139,7 @@ export function makeFindUnique({ config, modelName }: { config: ConfigInternal; 
         type: "'#{modelName}'",
         nullable: true,
         resolve: makeFindUniqueResloverTemplate({
-            prismaCaller: "prisma",
+            prismaCaller: config.crud.prismaCaller,
             modelName: modelName,
         }),
     });
@@ -154,7 +154,7 @@ export function makeCount({ config, modelName }: { config: ConfigInternal; model
         type: "'Int'",
         nullable: false,
         resolve: makeQueryResloverTemplate({
-            prismaCaller: "prisma",
+            prismaCaller: config.crud.prismaCaller,
             isPrisma: false,
             modelName,
             operation: "count",
