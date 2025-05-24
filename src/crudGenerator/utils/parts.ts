@@ -26,7 +26,7 @@ export async function writeIndex({
     config: ConfigInternal;
     model: DMMF.Model;
 }) {
-    const outputPath = path.join(config.crud.outputDir, model.name, "index.ts");
+    const outputPath = path.join(config.global.outputDir, model.name, "index.ts");
     await writePothosFile({
         content: `export * from "./mutations";
 export * from "./object.base";
@@ -47,7 +47,7 @@ export async function writeObject(
     });
 
     const fileLocation = path.join(
-        config.crud.outputDir,
+        config.global.outputDir,
         model.name,
         "object.base.ts"
     );
@@ -109,7 +109,7 @@ export async function writeResolvers({
     await Promise.all(
         resolvers.map((operationName) => {
             const fileLocation = path.join(
-                config.crud.outputDir,
+                config.global.outputDir,
                 model.name,
                 type,
                 `${operationName}.base.ts`
@@ -146,7 +146,7 @@ export async function writeResolvers({
                     )
                     .join("\n") + "\n",
             destination: path.join(
-                config.crud.outputDir,
+                config.global.outputDir,
                 model.name,
                 type,
                 "index.ts"

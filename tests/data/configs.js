@@ -8,11 +8,12 @@ module.exports = {
         prismaCaller: "context.db",
         disabled: false,
         // inputsImporter: "import * as Inputs from '@/schema/inputs'",
-        deleteOutputDirBeforeGenerate: true,
     },
     inputs: {
         prismaImporter: `import { Prisma } from '.prisma/client';`,
         outputFilePath: "./src/schema/__generated__/inputs.ts",
     },
-    global: {},
+    global: {
+        deleteOutputDirBeforeGenerate: true,
+    },
 };

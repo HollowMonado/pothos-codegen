@@ -16,8 +16,8 @@ export async function generateCrud({
     config: ConfigInternal;
     dmmf: DMMF.Document;
 }): Promise<void> {
-    if (config.crud.deleteOutputDirBeforeGenerate) {
-        await deleteFolder(path.join(config.crud.outputDir));
+    if (config.global.deleteOutputDirBeforeGenerate) {
+        await deleteFolder(path.join(config.global.outputDir));
     }
 
     // Generate CRUD directories (e.g. User, Comment, ...)
@@ -93,7 +93,7 @@ async function generateAutocrudFile({
         })
         .join("\n");
 
-    const fileLocation = path.join(config.crud.outputDir, "autocrud.ts");
+    const fileLocation = path.join(config.global.outputDir, "autocrud.ts");
     await writePothosFile({
         content: makeAutoCrudFileTemplate({
             builderImportPath: config.global.builderImportPath,
@@ -112,7 +112,7 @@ async function generateUtilsFile({
     config: ConfigInternal;
     dmmf: DMMF.Document;
 }) {
-    const fileLocation = path.join(config.crud.outputDir, "utils.ts");
+    const fileLocation = path.join(config.global.outputDir, "utils.ts");
 
     await writePothosFile({
         content: makeUtilsTemplate({
@@ -134,7 +134,10 @@ async function generateObjectsFile({
     const modelNamesEachLine = modelNames
         .map((model) => `'${model}',`)
         .join("\n  ");
-    const fileLocationObjects = path.join(config.crud.outputDir, "objects.ts");
+    const fileLocationObjects = path.join(
+        config.global.outputDir,
+        "objects.ts"
+    );
 
     await writePothosFile({
         content: makeObjectsFileTemplate({

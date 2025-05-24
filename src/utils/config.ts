@@ -7,8 +7,6 @@ export interface Config {
     inputs?: {
         /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
         prismaImporter?: string;
-        /** Path to generate the inputs file to from project root. Default: `'./generated/inputs.ts'` */
-        outputFilePath?: string;
         /** List of excluded scalars from generated output */
         excludeScalars?: string[];
         /** TODO: Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar.
@@ -26,8 +24,6 @@ export interface Config {
         prismaCaller?: string;
         /** TODO: Any additional imports you might want to add to the resolvers (e.g. your prisma client). Default: `''` */
         resolverImports?: string;
-        /** Directory to generate crud code into from project root. Default: `'./generated'` */
-        outputDir?: string;
         /** An array of parts of resolver names to be excluded from generation. Ie: ["User"] Default: [] */
         excludeResolversContain?: string[];
         /** An array of resolver names to be excluded from generation. Ie: ["upsertOneComment"] Default: [] */
@@ -36,13 +32,15 @@ export interface Config {
         includeResolversContain?: string[];
         /** An array of resolver names to be included from generation (to bypass exclude contain). Ie: if exclude ["User"], include ["UserReputation"] Default: [] */
         includeResolversExact?: string[];
-        /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
-        deleteOutputDirBeforeGenerate?: boolean;
         /** TODO: Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar. Default: 'Objects' */
         mapIdFieldsToGraphqlId?: false | "Objects";
     };
     /** Global config */
     global?: {
+        /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
+        deleteOutputDirBeforeGenerate?: boolean;
+        /** Directory to generate crud code into from project root. Default: `'./generated'` */
+        outputDir?: string;
         /** Location of builder. Default: './builder', */
         builderImportPath?: string;
     };
@@ -99,15 +97,15 @@ export function getDefaultConfig(): ConfigInternal {
             prismaImporter: `import { Prisma } from '.prisma/client';`,
             prismaCaller: "context.prisma",
             resolverImports: "",
-            outputDir: "./generated",
             excludeResolversContain: [],
             excludeResolversExact: [],
             includeResolversContain: [],
             includeResolversExact: [],
-            deleteOutputDirBeforeGenerate: false,
             mapIdFieldsToGraphqlId: "Objects",
         },
         global: {
+            outputDir: "./generated",
+            deleteOutputDirBeforeGenerate: false,
             builderImportPath: "./builder",
         },
     };

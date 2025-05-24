@@ -25,7 +25,7 @@ export function getEnums({ dmmf }: { dmmf: DMMF.Document }) {
 export function getImports({ config }: { config: ConfigInternal }) {
     return [
         config.inputs.prismaImporter,
-        `import { builder } from "../builder";`,
+        `import { builder } from "${config.global.builderImportPath}"`,
     ].join("\n");
 }
 

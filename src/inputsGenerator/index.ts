@@ -1,4 +1,5 @@
 import type { DMMF } from "@prisma/generator-helper";
+import path from "path";
 import { env } from "process";
 import { ConfigInternal } from "utils/config.js";
 import { writePothosFile } from "utils/filesystem.js";
@@ -34,7 +35,7 @@ export async function generateInputs({
             destination: "dmmf.json",
         });
 
-    const fileLocation = config.inputs.outputFilePath;
+    const fileLocation = path.join(config.global.outputDir, "inputs.ts");
 
     const imports = getImports({ config });
     const util = getUtil();
