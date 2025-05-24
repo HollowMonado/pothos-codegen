@@ -1,16 +1,14 @@
+import { ConfigInternal } from "utils/config.js";
 import { firstLetterLowerCase } from "utils/string.js";
 
-export const queryOperationNames = [
-    "findFirst",
-    "findMany",
-    "count",
-    "findUnique",
-] as const;
+export const queryOperationNames = ["findFirst", "findMany", "count", "findUnique"] as const;
 export type QueryOperation = (typeof queryOperationNames)[number];
+export const batchQueryOperations = ["count"];
 
 function makeQueryTemplate({
     queryOperation,
     modelName,
+    builderImportPath,
     argsReturn,
     type,
     nullable,
@@ -18,13 +16,22 @@ function makeQueryTemplate({
 }: {
     queryOperation: QueryOperation;
     modelName: string;
+    builderImportPath: string;
     argsReturn: string;
     type: string;
     nullable: boolean;
     resolve: string;
 }) {
-    return `import * as Inputs from '../../inputs';
-import { builder } from '../../../builder';
+    let objectType = null;
+    if (batchQueryOperations.includes(queryOperation)) {
+        objectType = "QueryObject";
+    } else {
+        objectType = "QueryPrismaObject";
+    }
+
+    return `import * as Inputs from '../../inputs.js';
+import { ${objectType} } from "../../utils.js";
+import { builder } from '${builderImportPath}';
 
 export const ${queryOperation}${modelName}QueryArgs = builder.args((t) => (${argsReturn}))
 
@@ -80,23 +87,18 @@ function makeFindUniqueArgsTemplate({ modelName }: { modelName: string }) {
     return `{ where: t.field({ type: Inputs.${modelName}WhereUniqueInput, required: true }) }`;
 }
 
-function makeFindUniqueResloverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeFindUniqueResloverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
 
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.findUnique({ where: args.where, ...query })`;
 }
 
-export function makeFindFirst({ modelName }: { modelName: string }) {
+export function makeFindFirst({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeQueryTemplate({
         queryOperation: "findFirst",
         modelName: modelName,
+        builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
         type: "'#{modelName}'",
         nullable: false,
@@ -110,10 +112,11 @@ export function makeFindFirst({ modelName }: { modelName: string }) {
     });
 }
 
-export function makeFindMany({ modelName }: { modelName: string }) {
+export function makeFindMany({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeQueryTemplate({
         queryOperation: "findMany",
         modelName: modelName,
+        builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
         type: "['#{modelName}']",
         nullable: true,
@@ -127,10 +130,11 @@ export function makeFindMany({ modelName }: { modelName: string }) {
     });
 }
 
-export function makeFindUnique({ modelName }: { modelName: string }) {
+export function makeFindUnique({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeQueryTemplate({
         queryOperation: "findUnique",
         modelName: modelName,
+        builderImportPath: config.global.builderImportPath,
         argsReturn: makeFindUniqueArgsTemplate({ modelName }),
         type: "'#{modelName}'",
         nullable: true,
@@ -141,10 +145,11 @@ export function makeFindUnique({ modelName }: { modelName: string }) {
     });
 }
 
-export function makeCount({ modelName }: { modelName: string }) {
+export function makeCount({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeQueryTemplate({
         queryOperation: "count",
         modelName: modelName,
+        builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
         type: "'Int'",
         nullable: false,

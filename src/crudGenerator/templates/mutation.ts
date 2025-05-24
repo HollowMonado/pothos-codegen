@@ -11,7 +11,7 @@ export const mutationOperationNames = [
     "upsertOne",
 ] as const;
 export type MutationOperation = (typeof mutationOperationNames)[number];
-export const batchMutationOperations: Partial<typeof mutationOperationNames> = ["updateMany", "deleteMany"] as const;
+export const batchMutationOperations = ["updateMany", "deleteMany"];
 
 function makeMutationTemplate({
     mutationOperation,
@@ -38,7 +38,7 @@ function makeMutationTemplate({
     }
 
     return `import * as Inputs from '../../inputs.js';
-import { MutationPrismaObject } from "../../utils.js";
+import { ${objectType} } from "../../utils.js";
 import { builder } from '${builderImportPath}';
 
 export const ${mutationOperation}${modelName}MutationArgs = builder.args((t) => (${argsReturn}))

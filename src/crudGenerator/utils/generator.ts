@@ -17,17 +17,9 @@ import {
     queryOperationNames,
 } from "crudGenerator/templates/query.js";
 import { ConfigInternal } from "utils/config.js";
-import {
-    GeneratedResolver,
-    writeIndex,
-    writeObject,
-    writeResolvers,
-} from "./parts";
+import { GeneratedResolver, writeIndex, writeObject, writeResolvers } from "./parts";
 
-export const allOperationNames = [
-    ...queryOperationNames,
-    ...mutationOperationNames,
-] as const;
+export const allOperationNames = [...queryOperationNames, ...mutationOperationNames] as const;
 export type AllOperation = (typeof allOperationNames)[number];
 
 export function generateResolver({
@@ -41,13 +33,13 @@ export function generateResolver({
 }) {
     switch (operationName) {
         case "findFirst":
-            return makeFindFirst({ modelName });
+            return makeFindFirst({ config, modelName });
         case "findMany":
-            return makeFindMany({ modelName });
+            return makeFindMany({ config, modelName });
         case "count":
-            return makeCount({ modelName });
+            return makeCount({ config, modelName });
         case "findUnique":
-            return makeFindUnique({ modelName });
+            return makeFindUnique({ config, modelName });
         case "createMany":
             return makeCreateMany({ config, modelName });
         case "createOne":
