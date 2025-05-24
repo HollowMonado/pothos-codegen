@@ -11,7 +11,6 @@ module.exports = {
     },
     inputs: {
         prismaImporter: `import { Prisma } from '.prisma/client';`,
-        outputFilePath: "./src/schema/__generated__/inputs.ts",
     },
     global: {
         deleteOutputDirBeforeGenerate: true,

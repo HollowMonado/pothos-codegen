@@ -120,7 +120,7 @@ export const builder = new SchemaBuilder<{
 
 /** @type {import('prisma-generator-pothos-codegen').Config} */
 module.exports = {
-    inputs: { outputFilePath: "./src/graphql/__generated__/inputs.ts" },
+    inputs:  },
     crud: {
         outputDir: "./src/graphql/__generated__/",
         inputsImporter: `import * as Inputs from '@graphql/__generated__/inputs';`,
@@ -140,8 +140,6 @@ module.exports = {
   inputs?: {
     /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
     prismaImporter?: string;
-    /** Path to generate the inputs file to from project root. Default: `'./generated/inputs.ts'` */
-    outputFilePath?: string;
     /** List of excluded scalars from generated output */
     excludeScalars?: string[];
     /** A function to replace generated source. Combined with global replacer config */

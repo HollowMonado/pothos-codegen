@@ -11,6 +11,7 @@ export const mutationOperationNames = [
     "upsertOne",
 ] as const;
 export type MutationOperation = (typeof mutationOperationNames)[number];
+export const batchMutationOperations: Partial<typeof mutationOperationNames> = ["updateMany", "deleteMany"] as const;
 
 function makeMutationTemplate({
     mutationOperation,
@@ -29,13 +30,20 @@ function makeMutationTemplate({
     nullable: boolean;
     resolve: string;
 }) {
+    let objectType = null;
+    if (batchMutationOperations.includes(mutationOperation)) {
+        objectType = "MutationObject";
+    } else {
+        objectType = "MutationPrismaObject";
+    }
+
     return `import * as Inputs from '../../inputs.js';
 import { MutationPrismaObject } from "../../utils.js";
 import { builder } from '${builderImportPath}';
 
 export const ${mutationOperation}${modelName}MutationArgs = builder.args((t) => (${argsReturn}))
 
-export const ${mutationOperation}${modelName}MutationObject: MutationPrismaObject = {
+export const ${mutationOperation}${modelName}MutationObject: ${objectType} = {
   type: ${type},
   nullable: ${nullable},
   args: ${mutationOperation}${modelName}MutationArgs,
@@ -76,80 +84,38 @@ function makeUpsertOneArgsTemplate({ modelName }: { modelName: string }) {
     }`;
 }
 
-function makeCreateManyResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeCreateManyResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.createManyAndReturn({ data: args.data })`;
 }
-function makeCreateOneResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeCreateOneResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.create({ data: args.data, ...query })`;
 }
 
-function makeDeleteManyResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeDeleteManyResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.deleteMany({ where: args.where })`;
 }
-function makeDeleteOneResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeDeleteOneResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.delete({ where: args.where, ...query })`;
 }
-function makeUpdateManyResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeUpdateManyResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.updateMany({ where: args.where || undefined, data: args.data })`;
 }
-function makeUpdateOneResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeUpdateOneResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.update({ where: args.where, data: args.data, ...query })`;
 }
-function makeUpsertOneResolverTemplate({
-    prismaCaller,
-    modelName,
-}: {
-    prismaCaller: string;
-    modelName: string;
-}) {
+function makeUpsertOneResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.upsert({
@@ -160,18 +126,12 @@ function makeUpsertOneResolverTemplate({
       })`;
 }
 
-export function makeCreateMany({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeCreateMany({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "createMany",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeCreateManyArgsTemplate({ config, modelName }),
+        argsReturn: makeCreateManyArgsTemplate({ modelName }),
         type: `["${modelName}"]`,
         nullable: false,
         resolve: makeCreateManyResolverTemplate({
@@ -180,18 +140,12 @@ export function makeCreateMany({
         }),
     });
 }
-export function makeCreateOne({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeCreateOne({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "createOne",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeCreateOneArgsTemplate({ config, modelName }),
+        argsReturn: makeCreateOneArgsTemplate({ modelName }),
         type: `"${modelName}"`,
         nullable: false,
         resolve: makeCreateOneResolverTemplate({
@@ -200,18 +154,12 @@ export function makeCreateOne({
         }),
     });
 }
-export function makeDeleteMany({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeDeleteMany({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "deleteMany",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeDeleteManyArgsTemplate({ config, modelName }),
+        argsReturn: makeDeleteManyArgsTemplate({ modelName }),
         type: "BatchPayload",
         nullable: true,
         resolve: makeDeleteManyResolverTemplate({
@@ -220,18 +168,12 @@ export function makeDeleteMany({
         }),
     });
 }
-export function makeDeleteOne({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeDeleteOne({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "deleteOne",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeDeleteOneArgsTemplate({ config, modelName }),
+        argsReturn: makeDeleteOneArgsTemplate({ modelName }),
         type: `"${modelName}"`,
         nullable: true,
         resolve: makeDeleteOneResolverTemplate({
@@ -240,18 +182,12 @@ export function makeDeleteOne({
         }),
     });
 }
-export function makeUpdateMany({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeUpdateMany({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "updateMany",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeUpdateManyArgsTemplate({ config, modelName }),
+        argsReturn: makeUpdateManyArgsTemplate({ modelName }),
         type: "BatchPayload",
         nullable: false,
         resolve: makeUpdateManyResolverTemplate({
@@ -260,18 +196,12 @@ export function makeUpdateMany({
         }),
     });
 }
-export function makeUpdateOne({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeUpdateOne({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "updateOne",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeUpdateOneArgsTemplate({ config, modelName }),
+        argsReturn: makeUpdateOneArgsTemplate({ modelName }),
         type: `"${modelName}"`,
         nullable: true,
         resolve: makeUpdateOneResolverTemplate({
@@ -280,18 +210,12 @@ export function makeUpdateOne({
         }),
     });
 }
-export function makeUpsertOne({
-    config,
-    modelName,
-}: {
-    config: ConfigInternal;
-    modelName: string;
-}) {
+export function makeUpsertOne({ config, modelName }: { config: ConfigInternal; modelName: string }) {
     return makeMutationTemplate({
         mutationOperation: "upsertOne",
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
-        argsReturn: makeUpsertOneArgsTemplate({ config, modelName }),
+        argsReturn: makeUpsertOneArgsTemplate({ modelName }),
         type: `"${modelName}"`,
         nullable: false,
         resolve: makeUpsertOneResolverTemplate({

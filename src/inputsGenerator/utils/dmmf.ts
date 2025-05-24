@@ -1,4 +1,5 @@
 import type { DMMF } from "@prisma/generator-helper";
+import { ConfigInternal } from "utils/config.js";
 
 export type UsedScalars = {
     hasDateTime: boolean;
@@ -10,7 +11,10 @@ export type UsedScalars = {
 };
 
 /** Reads the input types and returns what scalars are used */
-export function getUsedScalars(inputs: readonly DMMF.InputType[]): UsedScalars {
+export function getUsedScalars({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }): UsedScalars {
+    const inputs = dmmf.schema.inputObjectTypes.prisma;
+    const excludeScalars = config.inputs.excludeScalars;
+
     let hasDateTime = false;
     let hasDecimal = false;
     let hasBytes = false;
@@ -23,13 +27,10 @@ export function getUsedScalars(inputs: readonly DMMF.InputType[]): UsedScalars {
         for (const { inputTypes } of fields) {
             for (const { type, location } of inputTypes) {
                 if (type === "Json" && location === "scalar") hasJson = true;
-                if (type === "DateTime" && location === "scalar")
-                    hasDateTime = true;
-                if (type === "Decimal" && location === "scalar")
-                    hasDecimal = true;
+                if (type === "DateTime" && location === "scalar") hasDateTime = true;
+                if (type === "Decimal" && location === "scalar") hasDecimal = true;
                 if (type === "Bytes" && location === "scalar") hasBytes = true;
-                if (type === "BigInt" && location === "scalar")
-                    hasBigInt = true;
+                if (type === "BigInt" && location === "scalar") hasBigInt = true;
             }
         }
     }
@@ -70,9 +71,7 @@ export function getMainInput() {
 
     // If one list, priorize it
     const priorizeWhereInput = (inputs: DMMF.InputTypeRef[]) => {
-        const listInputs = inputs.find((el) =>
-            el.type.toString().includes("WhereInput")
-        );
+        const listInputs = inputs.find((el) => el.type.toString().includes("WhereInput"));
         if (listInputs) {
             return listInputs;
         }
@@ -81,22 +80,16 @@ export function getMainInput() {
 
     // If one list, priorize it
     const priorizeSetUpdateAlternative = (inputs: DMMF.InputTypeRef[]) => {
-        const setType = inputs.find((el) =>
-            el.type.toString().includes("FieldUpdateOperationsInput")
-        );
+        const setType = inputs.find((el) => el.type.toString().includes("FieldUpdateOperationsInput"));
         if (setType) {
             return setType;
         }
         return undefined;
     };
 
-    const run = (
-        rawInputs: readonly DMMF.InputTypeRef[]
-    ): DMMF.InputTypeRef => {
+    const run = (rawInputs: readonly DMMF.InputTypeRef[]): DMMF.InputTypeRef => {
         // Ignore fieldRefTypes
-        const inputs = rawInputs.filter(
-            (el) => el.location !== "fieldRefTypes"
-        );
+        const inputs = rawInputs.filter((el) => el.location !== "fieldRefTypes");
 
         const first = inputs[0];
         if (!first) throw new Error("No input type found");
@@ -113,8 +106,7 @@ export function getMainInput() {
         const whereInputPriority = priorizeWhereInput(inputs);
         if (whereInputPriority) return whereInputPriority;
 
-        const setUpdateAlternativePriority =
-            priorizeSetUpdateAlternative(inputs);
+        const setUpdateAlternativePriority = priorizeSetUpdateAlternative(inputs);
         if (setUpdateAlternativePriority) return setUpdateAlternativePriority;
 
         const isNotScalarPriority = priorizeNotScalar(inputs);

@@ -2,20 +2,10 @@ import type { DMMF } from "@prisma/generator-helper";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
 import { deleteFolder, writePothosFile } from "utils/filesystem.js";
-import {
-    makeAutoCrudFileTemplate,
-    makeObjectsFileTemplate,
-    makeUtilsTemplate,
-} from "./templates/root";
+import { makeAutoCrudFileTemplate, makeObjectsFileTemplate, makeUtilsTemplate } from "./templates/root";
 import { generateModel } from "./utils/generator.js";
 
-export async function generateCrud({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}): Promise<void> {
+export async function generateCrud({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }): Promise<void> {
     if (config.global.deleteOutputDirBeforeGenerate) {
         await deleteFolder(path.join(config.global.outputDir));
     }
@@ -28,13 +18,7 @@ export async function generateCrud({
     await generateAutocrudFile({ generatedModels, config, dmmf });
 }
 
-async function generateAllModels({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}) {
+async function generateAllModels({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     const modelNames = dmmf.datamodel.models.map((model) => model.name);
     return await Promise.all(
         modelNames.map(async (model) => {
@@ -67,26 +51,16 @@ async function generateAutocrudFile({
     Object: ${model.name}.${model.name}Object,
     queries: ${(() => {
         const queries =
-            models
-                .find((el) => el.model === model.name)
-                ?.reslovers.filter((el) => el.type === "queries") || [];
+            models.find((el) => el.model === model.name)?.reslovers.filter((el) => el.type === "queries") || [];
         return `{\n${queries
-            .map(
-                (el) =>
-                    `      ${el.resolverName}: ${el.modelName}.${el.resolverName}${el.modelName}QueryObject,`
-            )
+            .map((el) => `      ${el.resolverName}: ${el.modelName}.${el.resolverName}${el.modelName}QueryObject,`)
             .join("\n")}\n    }`;
     })()},
     mutations: ${(() => {
         const mutations =
-            models
-                .find((el) => el.model === model.name)
-                ?.reslovers.filter((el) => el.type === "mutations") || [];
+            models.find((el) => el.model === model.name)?.reslovers.filter((el) => el.type === "mutations") || [];
         return `{\n${mutations
-            .map(
-                (el) =>
-                    `      ${el.resolverName}: ${el.modelName}.${el.resolverName}${el.modelName}MutationObject,`
-            )
+            .map((el) => `      ${el.resolverName}: ${el.modelName}.${el.resolverName}${el.modelName}MutationObject,`)
             .join("\n")}\n    }`;
     })()},
   },`;
@@ -105,13 +79,7 @@ async function generateAutocrudFile({
 }
 
 // Generate root utils.ts file
-async function generateUtilsFile({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}) {
+async function generateUtilsFile({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     const fileLocation = path.join(config.global.outputDir, "utils.ts");
 
     await writePothosFile({
@@ -123,21 +91,10 @@ async function generateUtilsFile({
 }
 
 // Generate root objects.ts file (export all models + prisma objects)
-async function generateObjectsFile({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}) {
+async function generateObjectsFile({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     const modelNames = dmmf.datamodel.models.map((model) => model.name);
-    const modelNamesEachLine = modelNames
-        .map((model) => `'${model}',`)
-        .join("\n  ");
-    const fileLocationObjects = path.join(
-        config.global.outputDir,
-        "objects.ts"
-    );
+    const modelNamesEachLine = modelNames.map((model) => `'${model}',`).join("\n  ");
+    const fileLocationObjects = path.join(config.global.outputDir, "objects.ts");
 
     await writePothosFile({
         content: makeObjectsFileTemplate({

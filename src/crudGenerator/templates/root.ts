@@ -7,7 +7,8 @@ export function makeObjectsFileTemplate({
     builderImportPath: string;
     modelNames: string;
 }) {
-    return `${prismaImporter}${builderImportPath}
+    return `${prismaImporter}
+import { builder } from "${builderImportPath}";
 
 export const BatchPayload = builder.objectType(builder.objectRef<Prisma.BatchPayload>('BatchPayload'), {
   description: 'Batch payloads from prisma.',
@@ -24,11 +25,7 @@ export type Model = typeof modelNames[number];
 `;
 }
 
-export function makeUtilsTemplate({
-    builderImport,
-}: {
-    builderImport: string;
-}) {
+export function makeUtilsTemplate({ builderImport }: { builderImport: string }) {
     return `
 import { FieldKind, FieldOptionsFromKind, InputFieldMap, InterfaceParam, ObjectRef, TypeParam } from "@pothos/core";
 import {

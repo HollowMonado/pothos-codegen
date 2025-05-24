@@ -88,7 +88,6 @@ export function getDefaultConfig(): ConfigInternal {
     return {
         inputs: {
             prismaImporter: `import { Prisma } from '.prisma/client';`,
-            outputFilePath: "./generated/inputs.ts",
             excludeScalars: [],
             mapIdFieldsToGraphqlId: false,
         },

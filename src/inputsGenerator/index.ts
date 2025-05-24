@@ -3,13 +3,7 @@ import path from "path";
 import { env } from "process";
 import { ConfigInternal } from "utils/config.js";
 import { writePothosFile } from "utils/filesystem.js";
-import {
-    getEnums,
-    getImports,
-    getInputs,
-    getScalars,
-    getUtil,
-} from "./utils/parts";
+import { getEnums, getImports, getInputs, getScalars, getUtil } from "./utils/parts";
 
 /** Types may vary between Prisma versions */
 export type Scalars<DecimalType, JsonInput, JsonOutput> = {
@@ -22,13 +16,7 @@ export type Scalars<DecimalType, JsonInput, JsonOutput> = {
     NEVER: { Input: void; Output: void };
 };
 
-export async function generateInputs({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}): Promise<void> {
+export async function generateInputs({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }): Promise<void> {
     if (env.isTesting)
         await writePothosFile({
             content: JSON.stringify(dmmf, null, 2),
@@ -38,7 +26,7 @@ export async function generateInputs({
     const fileLocation = path.join(config.global.outputDir, "inputs.ts");
 
     const imports = getImports({ config });
-    const util = getUtil();
+    const util = getUtil({ config, dmmf });
     const scalars = getScalars({ config, dmmf });
     const enums = getEnums({ dmmf });
     const inputs = getInputs({ config, dmmf });

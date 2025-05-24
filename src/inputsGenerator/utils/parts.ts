@@ -2,7 +2,7 @@ import type { DMMF } from "@prisma/generator-helper";
 import { ConfigInternal } from "utils/config.js";
 import { getUsedScalars } from "./dmmf.js";
 import { getInputFieldsString } from "./inputFields.js";
-import * as T from "./templates";
+import { bigIntScalar, bytesScalar, dateTimeScalar, decimalScalar, jsonScalar, neverScalar } from "./templates.js";
 
 export function getEnums({ dmmf }: { dmmf: DMMF.Document }) {
     return [
@@ -23,62 +23,55 @@ export function getEnums({ dmmf }: { dmmf: DMMF.Document }) {
 }
 
 export function getImports({ config }: { config: ConfigInternal }) {
-    return [
-        config.inputs.prismaImporter,
-        `import { builder } from "${config.global.builderImportPath}"`,
-    ].join("\n");
+    return [config.inputs.prismaImporter, `import { builder } from "${config.global.builderImportPath}"`].join("\n");
 }
 
-export function getScalars({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}) {
-    const excludeScalars = config.inputs.excludeScalars;
-    const usedScalars = getUsedScalars(dmmf.schema.inputObjectTypes.prisma);
+export function getScalars({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
+    const usedScalars = getUsedScalars({ config, dmmf });
+
     return [
-        ...(usedScalars.hasDateTime && !excludeScalars?.includes("DateTime")
-            ? [T.dateTimeScalar]
-            : []),
-        ...(usedScalars.hasDecimal && !excludeScalars?.includes("Decimal")
-            ? [T.decimalScalar]
-            : []),
-        ...(usedScalars.hasBytes && !excludeScalars?.includes("Bytes")
-            ? [T.bytesScalar]
-            : []),
-        ...(usedScalars.hasJson && !excludeScalars?.includes("Json")
-            ? [T.jsonScalar]
-            : []),
-        ...(usedScalars.hasBigInt && !excludeScalars?.includes("BigInt")
-            ? [T.bigIntScalar]
-            : []),
-        ...(usedScalars.hasNEVER && !excludeScalars?.includes("NEVER")
-            ? [T.neverScalar]
-            : []),
+        ...(usedScalars.hasDateTime ? [dateTimeScalar] : []),
+        ...(usedScalars.hasDecimal ? [decimalScalar] : []),
+        ...(usedScalars.hasBytes ? [bytesScalar] : []),
+        ...(usedScalars.hasJson ? [jsonScalar] : []),
+        ...(usedScalars.hasBigInt ? [bigIntScalar] : []),
+        ...(usedScalars.hasNEVER ? [neverScalar] : []),
     ].join("\n\n");
 }
 
-export function getUtil() {
-    return `type Filters = {
-  string: Prisma.StringFieldUpdateOperationsInput;
-  nullableString: Prisma.NullableStringFieldUpdateOperationsInput;
-  dateTime: Prisma.DateTimeFieldUpdateOperationsInput;
-  nullableDateTime: Prisma.NullableDateTimeFieldUpdateOperationsInput;
-  int: Prisma.IntFieldUpdateOperationsInput;
-  nullableInt: Prisma.NullableIntFieldUpdateOperationsInput;
-  bool: Prisma.BoolFieldUpdateOperationsInput;
-  nullableBool: Prisma.NullableBoolFieldUpdateOperationsInput;
-  bigInt: Prisma.BigIntFieldUpdateOperationsInput;
-  nullableBigInt: Prisma.NullableBigIntFieldUpdateOperationsInput;
-  bytes: Prisma.BytesFieldUpdateOperationsInput;
-  nullableBytes: Prisma.NullableBytesFieldUpdateOperationsInput;
-  float: Prisma.FloatFieldUpdateOperationsInput;
-  nullableFloat: Prisma.NullableFloatFieldUpdateOperationsInput;
-  decimal: Prisma.DecimalFieldUpdateOperationsInput;
-  nullableDecimal: Prisma.NullableDecimalFieldUpdateOperationsInput;
-};
+export function getUtil({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
+    const usedScalars = getUsedScalars({ config, dmmf });
+
+    const stringFilters = `string: Prisma.StringFieldUpdateOperationsInput;
+nullableString: Prisma.NullableStringFieldUpdateOperationsInput;`;
+    const intFilters = `int: Prisma.IntFieldUpdateOperationsInput;
+nullableInt: Prisma.NullableIntFieldUpdateOperationsInput;`;
+    const boolFilters = `bool: Prisma.BoolFieldUpdateOperationsInput;
+nullableBool: Prisma.NullableBoolFieldUpdateOperationsInput;`;
+    const bigIntFilters = `bigInt: Prisma.BigIntFieldUpdateOperationsInput;
+nullableBigInt: Prisma.NullableBigIntFieldUpdateOperationsInput;`;
+    const bytesFilters = `bytes: Prisma.BytesFieldUpdateOperationsInput;
+nullableBytes: Prisma.NullableBytesFieldUpdateOperationsInput;`;
+    const decimalFilters = `decimal: Prisma.DecimalFieldUpdateOperationsInput;
+nullableDecimal: Prisma.NullableDecimalFieldUpdateOperationsInput;`;
+    const dateTimeFilters = `dateTime: Prisma.DateTimeFieldUpdateOperationsInput;
+nullableDateTime: Prisma.NullableDateTimeFieldUpdateOperationsInput;`;
+
+    const usedFilters = [
+        stringFilters,
+        intFilters,
+        boolFilters,
+        usedScalars.hasBigInt ? bigIntFilters : undefined,
+        usedScalars.hasBytes ? bytesFilters : undefined,
+        usedScalars.hasDecimal ? decimalFilters : undefined,
+        usedScalars.hasDateTime ? dateTimeFilters : undefined,
+    ].filter(Boolean) as string[];
+
+    const generatedFiltersType = `type Filters = {
+${usedFilters.join("\n")}
+};`;
+
+    return `${generatedFiltersType}
 
 type ApplyFilters<InputField> = {
   [F in keyof Filters]: 0 extends 1 & Filters[F]
@@ -106,20 +99,14 @@ function makeInputs({
     const allowedKeywords = ["Filter", "Compound", "UpdateOperations"];
     const filteredInputs = prismaInputs.filter((input) => {
         return (
-            allowedKeywords.some((allowedKeyword) =>
-                input.name.includes(allowedKeyword)
-            ) ||
-            Object.keys(inputNames).some((inputName) =>
-                input.name.startsWith(inputName)
-            )
+            allowedKeywords.some((allowedKeyword) => input.name.includes(allowedKeyword)) ||
+            Object.keys(inputNames).some((inputName) => input.name.startsWith(inputName))
         );
     });
 
     return filteredInputs
         .map((input) => {
-            const model = Object.entries(inputNames).find(([inputName]) =>
-                input.name.startsWith(inputName)
-            );
+            const model = Object.entries(inputNames).find(([inputName]) => input.name.startsWith(inputName));
 
             const inputName = input.name.replace("Unchecked", "");
             const prismaInputName = input.name;
@@ -138,13 +125,7 @@ function makeInputs({
         .join("\n\n");
 }
 
-export function getInputs({
-    config,
-    dmmf,
-}: {
-    config: ConfigInternal;
-    dmmf: DMMF.Document;
-}) {
+export function getInputs({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     // Map from possible input names to their related model
     const inputNames = dmmf.datamodel.models.reduce(
         (prev, curr) => {
