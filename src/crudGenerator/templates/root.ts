@@ -179,25 +179,6 @@ export type MutationPrismaObject<
 `;
 }
 
-// TODO: Refactor getParams to link model with object base, and remove any
-/**
-  User: {
-    Object: User.UserObject,
-    queries: {},
-    mutations: {},
-  },
-  Post: {
-    Object: Post.PostObject,
-    queries: {
-      findFirst: Post.findFirstPostQuery,
-      count: Post.countPostQuery,
-    },
-    mutations: {
-      createOne: Post.createOnePostMutation,
-    },
-  },
- */
-
 export function makeAutoCrudFileTemplate({
     imports,
     builderImportPath,
@@ -217,9 +198,9 @@ type Model = Objects.Model;
 export const Cruds: Record<
   Objects.Model,
   {
-    Object: any;
-    queries: Record<string, Function>;
-    mutations: Record<string, Function>;
+    Object: Record<string, any>;
+    queries: Record<string, Record<string, any>>;
+    mutations: Record<string, Record<string, any>>;
   }
 > = {
 ${modelsGenerated}
@@ -240,7 +221,7 @@ function generateResolversByType(type: ResolverType, opts?: CrudOptions) {
         const isPrismaField = !isntPrismaFieldList.includes(operationName);
 
         const getFields = (t: any) => {
-          const field = resolverObjectDefiner(t);
+          const field = resolverObjectDefiner;
           const handledField = opts?.handleResolver
             ? opts.handleResolver({
                 field,

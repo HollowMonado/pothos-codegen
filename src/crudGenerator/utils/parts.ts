@@ -121,7 +121,7 @@ export async function writeResolvers({
         });
     }
 
-    return resolvers.map(([resolverName]) => ({
+    return resolvers.map((resolverName) => ({
         resolverName,
         modelName: model.name,
         type,
