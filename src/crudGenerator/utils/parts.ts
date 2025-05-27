@@ -108,21 +108,18 @@ export async function writeResolvers({
         })
     );
 
-    if (resolvers.length)
+    if (resolvers.length) {
+        const mutationExports = mutationOperationNames.map((mutation) => `export * from "./${mutation}.base";`);
+        const queryExports = queryOperationNames.map((query) => `export * from "./${query}.base";`);
         await writePothosFile({
-            content:
-                resolvers
-                    .map(
-                        ([name]) =>
-                            `export ${(() => {
-                                return `{ ${name}${model.name}${type === "mutations" ? "Mutation" : "Query"}, ${name}${
-                                    model.name
-                                }${getResolverTypeName(type)}Object }`;
-                            })()} from './${name}.base';`
-                    )
-                    .join("\n") + "\n",
-            destination: path.join(config.global.outputDir, model.name, type, "index.ts"),
+            content: queryExports.join("\n") + "\n",
+            destination: path.join(config.global.outputDir, model.name, "queries", "index.ts"),
         });
+        await writePothosFile({
+            content: mutationExports.join("\n") + "\n",
+            destination: path.join(config.global.outputDir, model.name, "mutations", "index.ts"),
+        });
+    }
 
     return resolvers.map(([resolverName]) => ({
         resolverName,
