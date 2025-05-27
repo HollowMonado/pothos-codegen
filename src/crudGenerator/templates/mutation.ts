@@ -30,25 +30,31 @@ function makeMutationTemplate({
     nullable: boolean;
     resolve: string;
 }) {
+    const argName = `${mutationOperation}${modelName}MutationArgs`;
     let objectType = null;
+    let objectTypeImport = null;
+    let isBatch = false;
     if (batchMutationOperations.includes(mutationOperation)) {
-        objectType = "MutationObject";
+        objectType = `MutationObject<typeof BatchPayload, typeof ${argName}>;`;
+        objectTypeImport = "MutationObject";
+        isBatch = true;
     } else {
-        objectType = "MutationPrismaObject";
+        objectType = `MutationPrismaObject<typeof ${argName}, "${modelName}">`;
+        objectTypeImport = "MutationPrismaObject";
     }
 
     return `import * as Inputs from '../../inputs.js';
-import { ${objectType} } from "../../utils.js";
+import { ${objectTypeImport} } from "../../utils.js";${isBatch ? '\nimport { BatchPayload } from "../../objects.js";' : ""}
 import { builder } from '${builderImportPath}';
 
-export const ${mutationOperation}${modelName}MutationArgs = builder.args((t) => (${argsReturn}))
+export const ${argName} = builder.args((t) => (${argsReturn}))
 
-export const ${mutationOperation}${modelName}MutationObject: ${objectType} = {
+export const ${mutationOperation}${modelName}MutationObject = {
   type: ${type},
   nullable: ${nullable},
   args: ${mutationOperation}${modelName}MutationArgs,
   resolve: ${resolve},
-};
+} satisfies ${objectType};
 `;
 }
 

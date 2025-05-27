@@ -22,25 +22,30 @@ function makeQueryTemplate({
     nullable: boolean;
     resolve: string;
 }) {
+    const argName = `${queryOperation}${modelName}QueryArgs`;
+
     let objectType = null;
+    let objectTypeImport = null;
     if (batchQueryOperations.includes(queryOperation)) {
-        objectType = "QueryObject";
+        objectType = `QueryObject<"Int", typeof ${argName}>;`;
+        objectTypeImport = "QueryObject";
     } else {
-        objectType = "QueryPrismaObject";
+        objectType = `QueryPrismaObject<typeof ${argName}, "${modelName}">`;
+        objectTypeImport = "QueryPrismaObject";
     }
 
     return `import * as Inputs from '../../inputs.js';
-import { ${objectType} } from "../../utils.js";
+import { ${objectTypeImport} } from "../../utils.js";
 import { builder } from '${builderImportPath}';
 
-export const ${queryOperation}${modelName}QueryArgs = builder.args((t) => (${argsReturn}))
+export const ${argName} = builder.args((t) => (${argsReturn}))
 
-export const ${queryOperation}${modelName}QueryObject: ${objectType} = {
+export const ${queryOperation}${modelName}QueryObject = {
   type: ${type},
   nullable: ${nullable},
   args: ${queryOperation}${modelName}QueryArgs,
   resolve: ${resolve},
-};
+} satisfies ${objectType};
 `;
 }
 
@@ -70,14 +75,14 @@ function makeQueryResloverTemplate({
 }) {
     const modelNameLower = firstLetterLowerCase(modelName);
 
-    const queryArg = isPrisma ? "query" : "";
+    const queryArg = isPrisma ? "query, " : "";
     const query = isPrisma ? "\n...query" : "";
 
     return `async (${queryArg}_root, args, context, _info) =>
       await ${prismaCaller}.${modelNameLower}.${operation}({
         where: args.where || undefined,
         cursor: args.cursor || undefined,
-        take: args.take || undefined,${hasDistinct ? "distinct: args.distinct || undefined," : ""}
+        take: args.take || undefined,${hasDistinct ? "\ndistinct: args.distinct || undefined," : ""}
         skip: args.skip || undefined,
         orderBy: args.orderBy || undefined,${query}
       })`;
@@ -100,7 +105,7 @@ export function makeFindFirst({ config, modelName }: { config: ConfigInternal; m
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
-        type: "'#{modelName}'",
+        type: `'${modelName}'`,
         nullable: false,
         resolve: makeQueryResloverTemplate({
             prismaCaller: config.crud.prismaCaller,
@@ -118,7 +123,7 @@ export function makeFindMany({ config, modelName }: { config: ConfigInternal; mo
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
-        type: "['#{modelName}']",
+        type: `['${modelName}']`,
         nullable: true,
         resolve: makeQueryResloverTemplate({
             prismaCaller: config.crud.prismaCaller,
@@ -136,7 +141,7 @@ export function makeFindUnique({ config, modelName }: { config: ConfigInternal; 
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
         argsReturn: makeFindUniqueArgsTemplate({ modelName }),
-        type: "'#{modelName}'",
+        type: `'${modelName}'`,
         nullable: true,
         resolve: makeFindUniqueResloverTemplate({
             prismaCaller: config.crud.prismaCaller,
@@ -151,7 +156,7 @@ export function makeCount({ config, modelName }: { config: ConfigInternal; model
         modelName: modelName,
         builderImportPath: config.global.builderImportPath,
         argsReturn: makeQueryArgsTemplate({ modelName }),
-        type: "'Int'",
+        type: `'Int'`,
         nullable: false,
         resolve: makeQueryResloverTemplate({
             prismaCaller: config.crud.prismaCaller,
