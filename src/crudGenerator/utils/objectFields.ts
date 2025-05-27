@@ -9,19 +9,15 @@ export function getObjectFieldsString({
 }): { fields: string[] } {
     const fields = [] as string[];
 
-    dmmfFields.forEach(
-        ({ type: fieldType, name: fieldName, relationName, isRequired }) => {
-            if (relationName) {
-                // Relation
-                fields.push(`${fieldName}: t.relation('${fieldName}'),`);
-            } else {
-                // Scalar (DateTime, Json, Enums, etc.)
-                fields.push(
-                    `${fieldName}: t.expose("", {type: "${fieldType}", nullable: ${isRequired}}),`
-                );
-            }
+    dmmfFields.forEach(({ type: fieldType, name: fieldName, relationName, isRequired }) => {
+        if (relationName) {
+            // Relation
+            fields.push(`${fieldName}: t.relation('${fieldName}'),`);
+        } else {
+            // Scalar (DateTime, Json, Enums, etc.)
+            fields.push(`${fieldName}: t.expose("${fieldName}", {type: "${fieldType}", nullable: ${!isRequired}}),`);
         }
-    );
+    });
 
     return { fields };
 }

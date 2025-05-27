@@ -44,6 +44,7 @@ export async function writeObject(config: ConfigInternal, model: DMMF.Model): Pr
     // Write output
     await writePothosFile({
         content: makeObjectTemplate({
+            config: config,
             modelName: model.name,
             fields: fields.join("\n"),
         }),

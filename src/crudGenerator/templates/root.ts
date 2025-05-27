@@ -180,7 +180,8 @@ export function makeAutoCrudFileTemplate({
     modelsGenerated: string;
 }) {
     //TODO: remove any
-    return `${imports}${builderImportPath}
+    return `${imports}
+import { builder } from "${builderImportPath}";
 import * as Objects from './objects';
 
 type Model = Objects.Model;
