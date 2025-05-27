@@ -93,7 +93,7 @@ function makeUpsertOneArgsTemplate({ modelName }: { modelName: string }) {
 function makeCreateManyResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
     return `async (query, _root, args, context, _info) =>
-      await ${prismaCaller}.${modelNameLower}.createManyAndReturn({ data: args.data, ...query })`;
+      await ${prismaCaller}.${modelNameLower}.createManyAndReturn({ data: args.data, select: query.select })`;
 }
 function makeCreateOneResolverTemplate({ prismaCaller, modelName }: { prismaCaller: string; modelName: string }) {
     const modelNameLower = firstLetterLowerCase(modelName);
