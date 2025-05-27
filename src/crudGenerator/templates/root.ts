@@ -36,84 +36,18 @@ import {
     ObjectRef,
     TypeParam,
 } from "@pothos/core";
-import {
-    PrismaFieldOptions,
-    PrismaModelTypes,
-    PrismaObjectTypeOptions,
-    RelatedFieldOptions,
-} from "@pothos/plugin-prisma";
+import { PrismaFieldOptions, PrismaModelTypes, PrismaObjectTypeOptions } from "@pothos/plugin-prisma";
 
 type Types = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
 
-export const defineFieldObject = <
-    Name extends keyof Types["PrismaTypes"],
-    Type extends TypeParam<Types>,
-    Nullable extends boolean,
-    Args extends InputFieldMap,
->(
-    _: Name,
-    obj: FieldOptionsFromKind<
-        Types,
-        Types["PrismaTypes"][Name]["Shape"],
-        Type,
-        Nullable,
-        Args,
-        "Object",
-        unknown,
-        unknown
-    >
-) => obj as { type: Type; nullable: Nullable; description?: string; resolve: (typeof obj)["resolve"] };
-
-export const defineRelationObject = <
-    ModelName extends keyof Types["PrismaTypes"],
-    RelationName extends keyof Types["PrismaTypes"][ModelName]["Relations"],
-    Nullable extends boolean,
-    Args extends InputFieldMap,
->(
-    _: ModelName,
-    __: RelationName,
-    obj: RelatedFieldOptions<
-        Types,
-        Types["PrismaTypes"][ModelName],
-        RelationName,
-        Nullable,
-        Args,
-        unknown,
-        Types["PrismaTypes"][ModelName]["Shape"]
-    >
-) =>
-    obj as {
-        description: string | undefined;
-        nullable: Nullable;
-        args: Args;
-        query: (typeof obj)["query"];
-    };
-
-export const defineRelationFunction = <ModelName extends keyof Types["PrismaTypes"], O>(
-    _: ModelName,
-    func: (
-        t: PothosSchemaTypes.PrismaObjectFieldBuilder<
-            Types,
-            Types["PrismaTypes"][ModelName],
-            Types["PrismaTypes"][ModelName]["Shape"]
-        >
-    ) => O
-) => func;
-
-export const definePrismaObject = <
-    Name extends keyof Types["PrismaTypes"],
-    Obj extends PrismaObjectTypeOptions<
-        Types,
-        Types["PrismaTypes"][Name],
-        InterfaceParam<Types>[],
-        unknown,
-        unknown,
-        Types["PrismaTypes"][Name]["Shape"]
-    >,
->(
-    _: Name,
-    obj: Obj
-) => obj;
+export type PrismaObject<ModelName extends keyof PothosBuilderTypes["PrismaTypes"]> = PrismaObjectTypeOptions<
+    Types,
+    Types["PrismaTypes"][ModelName],
+    InterfaceParam<Types>[],
+    unknown,
+    unknown,
+    Types["PrismaTypes"][ModelName]["Shape"]
+>;
 
 type PothosBuilderTypes = typeof builder extends PothosSchemaTypes.SchemaBuilder<infer T> ? T : unknown;
 type PrismaModels = keyof PothosBuilderTypes["PrismaTypes"] | [keyof PothosBuilderTypes["PrismaTypes"]];

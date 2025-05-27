@@ -1,7 +1,6 @@
 import { ConfigInternal } from "utils/config.js";
 
 export function makeObjectTemplate({
-    config,
     modelName,
     fields,
 }: {
@@ -9,12 +8,12 @@ export function makeObjectTemplate({
     modelName: string;
     fields: string;
 }) {
-    return `import { builder } from "${config.global.builderImportPath}";
+    return `import { PrismaObject } from "../utils.js";
     
-export const ${modelName}Object = builder.prismaObject('${modelName}', {
+export const ${modelName}Object = {
   fields: (t) => ({
     ${fields}
   }),
-});
+} satisfies PrismaObject<"${modelName}">;
 `;
 }
