@@ -20,16 +20,16 @@
     "pothos-codegen": "./dist/src/bin.js"
   },
   "peerDependencies": {
-    "@pothos/core": "^4.0.2",
-    "@pothos/plugin-prisma": "^4.0.3",
-    "@prisma/client": "^5.0.0",
-    "prisma": "^5.0.0"
+    "@pothos/core": "^4.6.2",
+    "@pothos/plugin-prisma": "^4.8.1",
+    "@prisma/client": "^6.8.2",
+    "prisma": "^6.8.2"
   },
   "devDependencies": {
     "@prisma/internals": "6.8.2",
     "@swc/cli": "^0.7.7",
-    "@swc/core": "^1.11.24",
-    "@types/node": "^22.15.21",
+    "@swc/core": "^1.11.29",
+    "@types/node": "^22.15.23",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
