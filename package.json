@@ -14,7 +14,8 @@
   "scripts": {
     "test": "vitest",
     "swc_compile": "swc src --out-dir=dist",
-    "build": "npm run swc_compile"
+    "build": "npm run swc_compile",
+    "prepare": "npm run build"
   },
   "bin": {
     "pothos-codegen": "./dist/src/bin.js"
