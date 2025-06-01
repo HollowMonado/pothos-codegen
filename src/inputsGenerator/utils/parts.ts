@@ -15,7 +15,7 @@ export function getEnums({ dmmf }: { dmmf: DMMF.Document }) {
         .map((el) => {
             const enumName = el.name;
             const enumValues = JSON.stringify(el.values);
-            return `export const ${enumName}Enum = builder.enumType('${enumName}', {
+            return `export const ${enumName} = builder.enumType('${enumName}', {
   values: ${enumValues} as const,
 });`;
         })
