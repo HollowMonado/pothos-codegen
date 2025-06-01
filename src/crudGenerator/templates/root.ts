@@ -268,7 +268,7 @@ function includeOperation({
         const isIncluded = opts.includeOperation[model]?.includes(operation) ?? false;
         return isIncluded;
     } else if (opts.excludeOperation) {
-        const isExcluded = opts.excludeOperation[model]?.includes(operation) ?? true;
+        const isExcluded = opts.excludeOperation[model]?.includes(operation) ?? false;
         return !isExcluded;
     }
 
