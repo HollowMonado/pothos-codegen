@@ -110,18 +110,19 @@ function makeInputs({
 
             const inputName = input.name.replace("Unchecked", "");
             const prismaInputName = input.name;
-            const { fields, isFiltered } = getInputFieldsString({
+            const { fields, filteredFields } = getInputFieldsString({
                 input: input,
                 model: model?.[1],
                 config: config,
             });
             const finalFields = fields.replaceAll("Unchecked", "");
-            let inputType = `PrismaUpdateOperationsInputFilter<Prisma.${prismaInputName}>`;
-            if (isFiltered) {
-                inputType = `Partial<${inputType}>`;
+            let inputType = `Prisma.${prismaInputName}`;
+            const omitedFieldsString = filteredFields.map((field) => `'${field}'`).join(" | ");
+            if (filteredFields.length > 0) {
+                inputType = `Omit<Prisma.${prismaInputName}, ${omitedFieldsString}>`;
             }
 
-            return `export const ${inputName} = builder.inputRef<${inputType}, false>('${inputName}').implement({
+            return `export const ${inputName} = builder.inputRef<PrismaUpdateOperationsInputFilter<${inputType}>, false>('${inputName}').implement({
   fields: (t) => ({
     ${finalFields}
   }),

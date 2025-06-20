@@ -59,7 +59,7 @@ export const ${mutationOperation}${modelName}MutationObject = {
 }
 
 function makeCreateManyArgsTemplate({ modelName }: { modelName: string }) {
-    return `{ data: t.field({ type: [Inputs.${modelName}CreateInput], required: true }) }`;
+    return `{ data: t.field({ type: [Inputs.${modelName}CreateManyInput], required: true }) }`;
 }
 function makeCreateOneArgsTemplate({ modelName }: { modelName: string }) {
     return `{ data: t.field({ type: Inputs.${modelName}CreateInput, required: true }) }`;

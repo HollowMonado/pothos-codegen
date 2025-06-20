@@ -14,8 +14,9 @@ export function getInputFieldsString({
     config: ConfigInternal;
 }): {
     fields: string;
-    isFiltered: boolean;
+    filteredFields: string[];
 } {
+    const filteredFields: string[] = [];
     const filtered = input.fields.filter((field) => {
         let exclusionMap: Record<string, string[]> = {};
         if (input.name.startsWith(`${model?.name}Create`)) {
@@ -35,12 +36,12 @@ export function getInputFieldsString({
         }
 
         if (exclusionArray.includes(field.name)) {
+            filteredFields.push(field.name);
             return false;
         }
 
         return true;
     });
-    const isFiltered = filtered.length !== input.fields.length;
 
     // Convert remaining fields to string representation
     const fields =
@@ -89,5 +90,5 @@ export function getInputFieldsString({
               });
 
     const sep = "\n  ";
-    return { fields: fields.join(sep), isFiltered: isFiltered };
+    return { fields: fields.join(sep), filteredFields: filteredFields };
 }
