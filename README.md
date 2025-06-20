@@ -103,11 +103,7 @@ import { Prisma } from ".prisma/client";
 export const builder = new SchemaBuilder<{
     // ... Context, plugins? ...
     PrismaTypes: PrismaTypes; // required for @pothos/plugin-prisma integration (which is required)
-    Scalars: Scalars<
-        Prisma.Decimal,
-        Prisma.InputJsonValue | null,
-        Prisma.InputJsonValue
-    >; // required to define correct types for created scalars.
+    Scalars: Scalars<Prisma.Decimal, Prisma.InputJsonValue | null, Prisma.InputJsonValue>; // required to define correct types for created scalars.
 }>({
     // Other builder config
 });
@@ -142,8 +138,6 @@ module.exports = {
     prismaImporter?: string;
     /** List of excluded scalars from generated output */
     excludeScalars?: string[];
-    /** A function to replace generated source. Combined with global replacer config */
-    replacer?: Replacer<'inputs'>;
     /** Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar.
      *
      * ATTENTION: Mapping non String requires a conversion inside resolver, once GraphQl ID Input are coerced to String by definition. Default: false */
@@ -163,8 +157,6 @@ module.exports = {
     resolverImports?: string;
     /** Directory to generate crud code into from project root. Default: `'./generated'` */
     outputDir?: string;
-    /** A function to replace generated source. Combined with global replacer config */
-    replacer?: Replacer<'crud'>;
     /** A boolean to enable/disable generation of `autocrud.ts` which can be imported in schema root to auto generate all crud objects, queries and mutations. Default: `true` */
     generateAutocrud?: boolean;
     /** An array of parts of resolver names to be excluded from generation. Ie: ["User"] Default: [] */
@@ -186,8 +178,6 @@ module.exports = {
   };
   /** Global config */
   global?: {
-    /** A function to replace generated source */
-    replacer?: Replacer;
     /** Location of builder to replace in all files. Relative to package root. ie: './src/schema/builder'. Default: './builder' */
     builderImportPath?: string;
     /** Run function before generate */
@@ -246,9 +236,7 @@ import { UserUpdateInputFields } from "@/graphql/__generated__/inputs";
 
 // Note: you can't use `builder.inputType` to generate this new input
 export const UserUpdateInputCustom = builder
-    .inputRef<
-        Prisma.UserUpdateInput & { customArg: string }
-    >("UserUpdateInputCustom")
+    .inputRef<Prisma.UserUpdateInput & { customArg: string }>("UserUpdateInputCustom")
     .implement({
         fields: (t) => ({
             ...UserUpdateInputFields(t),
@@ -273,11 +261,7 @@ builder.prismaObject("User", {
     ...UserObject,
     fields: (t) => {
         // Type-safely omit and rename fields
-        const {
-            password: _password,
-            email: emailAddress,
-            ...fields
-        } = UserObject.fields(t);
+        const { password: _password, email: emailAddress, ...fields } = UserObject.fields(t);
         const sessionsField = UserSessionsFieldObject(t);
 
         return {
@@ -308,10 +292,7 @@ builder.prismaObject("User", {
 ```ts
 // ./src/graphql/User/query.ts
 
-import {
-    findManyUserQuery,
-    findManyUserQueryObject,
-} from "@/graphql/__generated__/User";
+import { findManyUserQuery, findManyUserQueryObject } from "@/graphql/__generated__/User";
 import { builder } from "@/graphql/builder"; // Pothos schema builder
 
 // Use the Query exports to accept all default generated query code

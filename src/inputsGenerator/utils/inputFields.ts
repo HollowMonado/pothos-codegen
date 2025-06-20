@@ -1,8 +1,7 @@
 import type { DMMF } from "@prisma/generator-helper";
 import { ConfigInternal } from "utils/config.js";
-import { firstLetterLowerCase, firstLetterUpperCase } from "utils/string.js";
+import { firstLetterLowerCase } from "utils/string.js";
 import { getMainInput } from "./dmmf.js";
-import { parseComment } from "./parser.js";
 
 /** Convert array of fields to a string code representation */
 export function getInputFieldsString({
@@ -13,76 +12,57 @@ export function getInputFieldsString({
     input: DMMF.InputType;
     model: DMMF.Model | undefined;
     config: ConfigInternal;
-}): string {
-    const omitted: { name: string; reason: string }[] = [];
-
+}): {
+    fields: string;
+    isFiltered: boolean;
+} {
     const filtered = input.fields.filter((field) => {
-        // Description is parsed for @Pothos.omit() comments and input fields are filtered
-        const modelField = model?.fields.find((f) => f.name === field.name);
+        let exclusionMap: Record<string, string[]> = {};
+        if (input.name.startsWith(`${model?.name}Create`)) {
+            exclusionMap = config.inputs.excludeInputs.create ?? {};
+        } else if (input.name.startsWith(`${model?.name}Update`)) {
+            exclusionMap = config.inputs.excludeInputs.update ?? {};
+        } else if (input.name.startsWith(`${model?.name}Where`)) {
+            exclusionMap = config.inputs.excludeInputs.where ?? {};
+        } else if (input.name.startsWith(`${model?.name}OrderBy`)) {
+            exclusionMap = config.inputs.excludeInputs.orderBy ?? {};
+        }
 
-        if (!modelField || !modelField.documentation) return true;
+        const exclusionArray = exclusionMap["$all"] ?? [];
+        const modelName = model?.name ?? "";
+        if (modelName in exclusionMap) {
+            exclusionArray.push(...exclusionMap[modelName]);
+        }
 
-        const omitTypes = parseComment(modelField.documentation);
-
-        if (!omitTypes) return true;
-        if (
-            omitTypes === "all" ||
-            omitTypes.some(
-                (omitType) =>
-                    input.name.startsWith(
-                        `${model?.name}${firstLetterUpperCase(omitType)}`
-                    ) ||
-                    input.name.startsWith(
-                        `${model?.name}Unchecked${firstLetterUpperCase(omitType)}`
-                    )
-            )
-        ) {
-            omitted.push({
-                name: field.name,
-                reason: "@Pothos.omit found in schema comment",
-            });
+        if (exclusionArray.includes(field.name)) {
             return false;
         }
 
         return true;
     });
+    const isFiltered = filtered.length !== input.fields.length;
 
     // Convert remaining fields to string representation
     const fields =
         filtered.length === 0
             ? ["_: t.field({ type: NEVER }),"]
             : filtered.map((field) => {
-                  const { isList, type, location } = getMainInput().run(
-                      field.inputTypes
-                  );
+                  const { isList, type, location } = getMainInput().run(field.inputTypes);
                   const props = {
                       required: field.isRequired,
                       description: undefined,
                   };
 
-                  const defaultScalarList = [
-                      "String",
-                      "Int",
-                      "Float",
-                      "Boolean",
-                  ];
-                  const isScalar =
-                      location === "scalar" &&
-                      defaultScalarList.includes(type.toString());
+                  const defaultScalarList = ["String", "Int", "Float", "Boolean"];
+                  const isScalar = location === "scalar" && defaultScalarList.includes(type.toString());
 
                   const getFieldType = () => {
                       if (isList) {
                           return `${type}List`;
                       }
 
-                      if (
-                          isScalar &&
-                          config.inputs.mapIdFieldsToGraphqlId ===
-                              "WhereUniqueInputs"
-                      ) {
-                          const fieldDetails = model?.fields.find(
-                              (f) => f.name === field.name
-                          );
+                      if (isScalar && config.inputs.mapIdFieldsToGraphqlId === "WhereUniqueInputs") {
+                          const fieldDetails = model?.fields.find((f) => f.name === field.name);
                           if (fieldDetails?.isId) {
                               return "id";
                           }
@@ -99,9 +79,7 @@ export function getInputFieldsString({
                   const getField = () => {
                       // BigInt is reserved
                       const renamedType = type === "BigInt" ? "Bigint" : type;
-                      const fieldType = isList
-                          ? `[${renamedType}]`
-                          : renamedType.toString();
+                      const fieldType = isList ? `[${renamedType}]` : renamedType.toString();
                       const relationProps = { ...props, type: fieldType };
                       // "type":"CommentCreateInput" -> "type":CommentCreateInput
                       return `field(${JSON.stringify(relationProps).replace(/(type.+:)"(.+)"/, "$1$2")})`;
@@ -111,7 +89,5 @@ export function getInputFieldsString({
               });
 
     const sep = "\n  ";
-    return `${fields.join(sep)}${omitted.length > 0 ? sep : ""}${omitted
-        .map((o) => `// '${o.name}' was omitted due to ${o.reason}`)
-        .join(sep)}`;
+    return { fields: fields.join(sep), isFiltered: isFiltered };
 }

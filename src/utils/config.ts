@@ -9,6 +9,12 @@ export interface Config {
         prismaImporter?: string;
         /** List of excluded scalars from generated output */
         excludeScalars?: string[];
+        excludeInputs?: {
+            create?: Record<string | "$all", string[]>;
+            update?: Record<string | "$all", string[]>;
+            where?: Record<string | "$all", string[]>;
+            orderBy?: Record<string | "$all", string[]>;
+        };
         /** TODO: Map all Prisma fields with "@id" attribute to Graphql "ID" Scalar.
          *
          * ATTENTION: Mapping non String requires a conversion inside resolver, once GraphQl ID Input are coerced to String by definition. Default: false */
@@ -73,11 +79,7 @@ export function getConfigPath({
 }
 
 /** Parses the configuration file based on the provided schema and config paths */
-export async function parseConfig({
-    configPath,
-}: {
-    configPath: string;
-}): Promise<Config> {
+export async function parseConfig({ configPath }: { configPath: string }): Promise<Config> {
     const importedFile = await import(configPath); // throw error if dont exist
     const { crud, global, inputs }: Config = importedFile.default || {};
 
@@ -89,6 +91,7 @@ export function getDefaultConfig(): ConfigInternal {
         inputs: {
             prismaImporter: `import { Prisma } from '.prisma/client';`,
             excludeScalars: [],
+            excludeInputs: {},
             mapIdFieldsToGraphqlId: false,
         },
         crud: {
