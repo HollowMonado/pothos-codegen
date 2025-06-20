@@ -106,13 +106,13 @@ function makeInputs({
 
     return filteredInputs
         .map((input) => {
-            const model = Object.entries(inputNames).find(([inputName]) => input.name.startsWith(inputName));
+            const model = Object.entries(inputNames).find(([inputName]) => input.name.startsWith(inputName))?.[1];
 
             const inputName = input.name.replace("Unchecked", "");
             const prismaInputName = input.name;
             const { fields, filteredFields } = getInputFieldsString({
                 input: input,
-                model: model?.[1],
+                model: model,
                 config: config,
             });
             const finalFields = fields.replaceAll("Unchecked", "");
@@ -133,33 +133,64 @@ function makeInputs({
 
 export function getInputs({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     // Map from possible input names to their related model
-    const inputNames = dmmf.datamodel.models.reduce(
-        (prev, curr) => {
-            return {
-                ...prev,
-                ...[
-                    "Where",
-                    "ScalarWhere",
-                    "Create",
-                    "Update",
-                    "Upsert",
-                    "OrderBy",
-                    "CountOrderBy",
-                    "MaxOrderBy",
-                    "MinOrderBy",
-                    "AvgOrderBy",
-                    "SumOrderBy",
-                ].reduce(
-                    (prev, keyword) => ({
-                        ...prev,
-                        [`${curr.name}${keyword}`]: curr,
-                    }),
-                    {}
-                ),
-            };
-        },
-        {} as Record<string, DMMF.Model>
-    );
+    let inputNames: Record<string, DMMF.Model>;
+    if (config.global.noNestedInput) {
+        inputNames = dmmf.datamodel.models.reduce(
+            (prev, curr) => {
+                return {
+                    ...prev,
+                    ...[
+                        "Where",
+                        "ScalarWhere",
+                        "Create",
+                        "Update",
+                        "Upsert",
+                        "OrderBy",
+                        "CountOrderBy",
+                        "MaxOrderBy",
+                        "MinOrderBy",
+                        "AvgOrderBy",
+                        "SumOrderBy",
+                    ].reduce(
+                        (prev, keyword) => ({
+                            ...prev,
+                            [`${curr.name}${keyword}`]: curr,
+                        }),
+                        {}
+                    ),
+                };
+            },
+            {} as Record<string, DMMF.Model>
+        );
+    } else {
+        inputNames = dmmf.datamodel.models.reduce(
+            (prev, curr) => {
+                return {
+                    ...prev,
+                    ...[
+                        "Where",
+                        "ScalarWhere",
+                        "Create",
+                        "Update",
+                        "Upsert",
+                        "OrderBy",
+                        "CountOrderBy",
+                        "MaxOrderBy",
+                        "MinOrderBy",
+                        "AvgOrderBy",
+                        "SumOrderBy",
+                    ].reduce(
+                        (prev, keyword) => ({
+                            ...prev,
+                            [`${curr.name}${keyword}`]: curr,
+                        }),
+                        {}
+                    ),
+                };
+            },
+            {} as Record<string, DMMF.Model>
+        );
+    }
 
     return makeInputs({
         config: config,

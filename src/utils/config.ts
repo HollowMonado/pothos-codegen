@@ -9,7 +9,7 @@ export interface Config {
         prismaImporter?: string;
         /** List of excluded scalars from generated output */
         excludeScalars?: string[];
-        excludeInputs?: {
+        excludeInputFields?: {
             create?: Record<string | "$all", string[]>;
             update?: Record<string | "$all", string[]>;
             where?: Record<string | "$all", string[]>;
@@ -43,6 +43,8 @@ export interface Config {
     };
     /** Global config */
     global?: {
+        /** Disable generation of nested create, update and delete input types. Default: `true` */
+        noNestedInput: boolean;
         /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
         deleteOutputDirBeforeGenerate?: boolean;
         /** Directory to generate crud code into from project root. Default: `'./generated'` */
@@ -91,7 +93,7 @@ export function getDefaultConfig(): ConfigInternal {
         inputs: {
             prismaImporter: `import { Prisma } from '.prisma/client';`,
             excludeScalars: [],
-            excludeInputs: {},
+            excludeInputFields: {},
             mapIdFieldsToGraphqlId: false,
         },
         crud: {
@@ -106,6 +108,7 @@ export function getDefaultConfig(): ConfigInternal {
             mapIdFieldsToGraphqlId: "Objects",
         },
         global: {
+            noNestedInput: true,
             outputDir: "./generated",
             deleteOutputDirBeforeGenerate: false,
             builderImportPath: "./builder",

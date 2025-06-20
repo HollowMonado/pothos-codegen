@@ -16,23 +16,40 @@ export function getInputFieldsString({
     fields: string;
     filteredFields: string[];
 } {
+    const nestedMutations = [
+        "create",
+        "connectOrCreate",
+        "createMany",
+        "upsert",
+        "update",
+        "updateMany",
+        "delete",
+        "deleteMany",
+    ];
+    let exclusionMap: Record<string, string[]> = {};
+    if (input.name.startsWith(`${model?.name}Create`)) {
+        exclusionMap = config.inputs.excludeInputFields.create ?? {};
+    } else if (input.name.startsWith(`${model?.name}Update`)) {
+        exclusionMap = config.inputs.excludeInputFields.update ?? {};
+    } else if (input.name.startsWith(`${model?.name}Where`)) {
+        exclusionMap = config.inputs.excludeInputFields.where ?? {};
+    } else if (input.name.startsWith(`${model?.name}OrderBy`)) {
+        exclusionMap = config.inputs.excludeInputFields.orderBy ?? {};
+    }
+
+    const exclusionArray = [...(exclusionMap["$all"] ?? [])];
+    const modelName = model?.name ?? "";
+    if (modelName in exclusionMap) {
+        exclusionArray.push(...exclusionMap[modelName]);
+    }
+
     const filteredFields: string[] = [];
     const filtered = input.fields.filter((field) => {
-        let exclusionMap: Record<string, string[]> = {};
-        if (input.name.startsWith(`${model?.name}Create`)) {
-            exclusionMap = config.inputs.excludeInputs.create ?? {};
-        } else if (input.name.startsWith(`${model?.name}Update`)) {
-            exclusionMap = config.inputs.excludeInputs.update ?? {};
-        } else if (input.name.startsWith(`${model?.name}Where`)) {
-            exclusionMap = config.inputs.excludeInputs.where ?? {};
-        } else if (input.name.startsWith(`${model?.name}OrderBy`)) {
-            exclusionMap = config.inputs.excludeInputs.orderBy ?? {};
-        }
-
-        const exclusionArray = exclusionMap["$all"] ?? [];
-        const modelName = model?.name ?? "";
-        if (modelName in exclusionMap) {
-            exclusionArray.push(...exclusionMap[modelName]);
+        if (config.global.noNestedInput) {
+            if (nestedMutations.includes(field.name)) {
+                filteredFields.push(field.name);
+                return false;
+            }
         }
 
         if (exclusionArray.includes(field.name)) {
