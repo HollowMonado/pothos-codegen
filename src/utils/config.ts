@@ -5,6 +5,9 @@ import path from "path";
 export interface Config {
     /** Input type generation config */
     inputs?: {
+        /** Disable generation of nested create, update and delete input types. Default: `true` */
+        noNestedInput?: boolean;
+        nestedInputModels?: string[];
         /** How to import the Prisma namespace. Default: `"import { Prisma } from '.prisma/client';"` */
         prismaImporter?: string;
         /** List of excluded scalars from generated output */
@@ -43,8 +46,6 @@ export interface Config {
     };
     /** Global config */
     global?: {
-        /** Disable generation of nested create, update and delete input types. Default: `true` */
-        noNestedInput: boolean;
         /** Caution: This delete the whole folder (Only use if the folder only has auto generated contents). A boolean to delete output dir before generate. Default: False */
         deleteOutputDirBeforeGenerate?: boolean;
         /** Directory to generate crud code into from project root. Default: `'./generated'` */
@@ -91,6 +92,8 @@ export async function parseConfig({ configPath }: { configPath: string }): Promi
 export function getDefaultConfig(): ConfigInternal {
     return {
         inputs: {
+            noNestedInput: true,
+            nestedInputModels: [],
             prismaImporter: `import { Prisma } from '.prisma/client';`,
             excludeScalars: [],
             excludeInputFields: {},
@@ -108,7 +111,6 @@ export function getDefaultConfig(): ConfigInternal {
             mapIdFieldsToGraphqlId: "Objects",
         },
         global: {
-            noNestedInput: true,
             outputDir: "./generated",
             deleteOutputDirBeforeGenerate: false,
             builderImportPath: "./builder",

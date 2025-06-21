@@ -42,10 +42,11 @@ export function getInputFieldsString({
     if (modelName in exclusionMap) {
         exclusionArray.push(...exclusionMap[modelName]);
     }
+    const shouldIncludeNested = config.inputs.nestedInputModels.includes(modelName);
 
     const filteredFields: string[] = [];
     const filtered = input.fields.filter((field) => {
-        if (config.global.noNestedInput) {
+        if (config.inputs.noNestedInput && !shouldIncludeNested) {
             if (nestedMutations.includes(field.name)) {
                 filteredFields.push(field.name);
                 return false;

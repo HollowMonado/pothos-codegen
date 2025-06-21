@@ -133,68 +133,26 @@ function makeInputs({
 
 export function getInputs({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }) {
     // Map from possible input names to their related model
-    let inputNames: Record<string, DMMF.Model>;
-    if (config.global.noNestedInput) {
-        inputNames = dmmf.datamodel.models.reduce(
-            (prev, curr) => {
-                return {
-                    ...prev,
-                    ...[
-                        "Where",
-                        "ScalarWhere",
-                        "Create",
-                        "Update",
-                        "Upsert",
-                        "OrderBy",
-                        "CountOrderBy",
-                        "MaxOrderBy",
-                        "MinOrderBy",
-                        "AvgOrderBy",
-                        "SumOrderBy",
-                    ].reduce(
-                        (prev, keyword) => ({
-                            ...prev,
-                            [`${curr.name}${keyword}`]: curr,
-                        }),
-                        {}
-                    ),
-                };
-            },
-            {} as Record<string, DMMF.Model>
-        );
-    } else {
-        inputNames = dmmf.datamodel.models.reduce(
-            (prev, curr) => {
-                return {
-                    ...prev,
-                    ...[
-                        "Where",
-                        "ScalarWhere",
-                        "Create",
-                        "Update",
-                        "Upsert",
-                        "OrderBy",
-                        "CountOrderBy",
-                        "MaxOrderBy",
-                        "MinOrderBy",
-                        "AvgOrderBy",
-                        "SumOrderBy",
-                    ].reduce(
-                        (prev, keyword) => ({
-                            ...prev,
-                            [`${curr.name}${keyword}`]: curr,
-                        }),
-                        {}
-                    ),
-                };
-            },
-            {} as Record<string, DMMF.Model>
-        );
-    }
-
-    return makeInputs({
-        config: config,
-        dmmf: dmmf,
-        inputNames: inputNames,
-    });
+    const inputNames = dmmf.datamodel.models.reduce(
+        (prev, curr) => {
+            return {
+                ...prev,
+                ...[
+                    "Where",
+                    "ScalarWhere",
+                    "Create",
+                    "Update",
+                    "Upsert",
+                    "OrderBy",
+                    "CountOrderBy",
+                    "MaxOrderBy",
+                    "MinOrderBy",
+                    "AvgOrderBy",
+                    "SumOrderBy",
+                ].reduce((prev, keyword) => ({ ...prev, [`${curr.name}${keyword}`]: curr }), {}),
+            };
+        },
+        {} as Record<string, DMMF.Model>
+    );
+    return makeInputs({ config: config, dmmf: dmmf, inputNames: inputNames });
 }
