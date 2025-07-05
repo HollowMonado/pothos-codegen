@@ -12,7 +12,7 @@ export function getObjectFieldsString({
     dmmfFields.forEach(({ type: fieldType, name: fieldName, relationName, isRequired }) => {
         if (relationName) {
             // Relation
-            fields.push(`${fieldName}: t.relation('${fieldName}'),`);
+            fields.push(`${fieldName}: t.relation('${fieldName}', { nullable: ${!isRequired} }),`);
         } else {
             // Scalar (DateTime, Json, Enums, etc.)
             fields.push(`${fieldName}: t.expose("${fieldName}", {type: "${fieldType}", nullable: ${!isRequired}}),`);
