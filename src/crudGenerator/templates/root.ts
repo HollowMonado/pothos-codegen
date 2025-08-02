@@ -246,7 +246,7 @@ function includeModel({ model, opts }: { model: Model; opts?: CrudOptions }): bo
         const isIncluded = opts.includeModel[model] ?? false;
         return isIncluded;
     } else if (opts.excludeModel) {
-        const isExcluded = opts.excludeModel[model] ?? true;
+        const isExcluded = opts.excludeModel[model] ?? false;
         return !isExcluded;
     }
 
