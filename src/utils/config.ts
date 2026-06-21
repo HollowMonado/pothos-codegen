@@ -1,5 +1,11 @@
-import { ExtendedGeneratorOptions } from "generator.js";
+import type { GeneratorOptions } from "@prisma/generator-helper";
 import path from "path";
+
+// Options injected by the generator block in `schema.prisma`.
+type SchemaGeneratorExtensionOptions = { generatorConfigPath?: string };
+
+/** Prisma generator options extended with the optional config-file path. */
+export type ExtendedGeneratorOptions = SchemaGeneratorExtensionOptions & GeneratorOptions;
 
 /** Interface used to configure generator behavior */
 export interface Config {

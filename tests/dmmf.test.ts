@@ -4,12 +4,13 @@ import {
     getMainInput,
     getUsedScalars,
 } from "../src/inputsGenerator/utils/dmmf";
+import { getDefaultConfig } from "../src/utils/config.ts";
 import { getSampleDMMF } from "./data/getPrismaSchema.ts";
 
 describe("getUsedScalars", () => {
     test("should return all complex scalars", async () => {
         const dmmf = await getSampleDMMF("complex");
-        const used = getUsedScalars(dmmf.schema.inputObjectTypes.prisma);
+        const used = getUsedScalars({ config: getDefaultConfig(), dmmf });
         expect(used.hasBigInt).toBe(true);
         expect(used.hasDateTime).toBe(true);
         expect(used.hasBigInt).toBe(true);
@@ -20,7 +21,7 @@ describe("getUsedScalars", () => {
 
     test("should return only simple scalars", async () => {
         const dmmf = await getSampleDMMF("simple");
-        const used = getUsedScalars(dmmf.schema.inputObjectTypes.prisma);
+        const used = getUsedScalars({ config: getDefaultConfig(), dmmf });
         expect(used.hasBigInt).toBe(false);
         expect(used.hasDateTime).toBe(true);
         expect(used.hasBigInt).toBe(false);

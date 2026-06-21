@@ -95,7 +95,7 @@ function makeInputs({
     dmmf: DMMF.Document;
     inputNames: Record<string, DMMF.Model>;
 }) {
-    const prismaInputs = dmmf.schema.inputObjectTypes.prisma;
+    const prismaInputs = dmmf.schema.inputObjectTypes.prisma ?? [];
     const allowedKeywords = ["Filter", "Compound", "UpdateOperations"];
     const filteredInputs = prismaInputs.filter((input) => {
         return (

@@ -12,7 +12,7 @@ export type UsedScalars = {
 
 /** Reads the input types and returns what scalars are used */
 export function getUsedScalars({ config, dmmf }: { config: ConfigInternal; dmmf: DMMF.Document }): UsedScalars {
-    const inputs = dmmf.schema.inputObjectTypes.prisma;
+    const inputs = dmmf.schema.inputObjectTypes.prisma ?? [];
     const excludeScalars = config.inputs.excludeScalars;
 
     let hasDateTime = false;

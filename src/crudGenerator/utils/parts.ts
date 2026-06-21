@@ -1,14 +1,70 @@
 import type { DMMF } from "@prisma/generator-helper";
-import { mutationOperationNames } from "crudGenerator/templates/mutation.js";
-import { queryOperationNames } from "crudGenerator/templates/query.js";
+import {
+    makeCreateMany,
+    makeCreateOne,
+    makeDeleteMany,
+    makeDeleteOne,
+    makeUpdateMany,
+    makeUpdateOne,
+    makeUpsertOne,
+    mutationOperationNames,
+} from "crudGenerator/templates/mutation.js";
+import {
+    makeCount,
+    makeFindFirst,
+    makeFindMany,
+    makeFindUnique,
+    queryOperationNames,
+} from "crudGenerator/templates/query.js";
 import path from "node:path";
 import { ConfigInternal } from "utils/config.js";
 import { debugLog, writePothosFile } from "utils/filesystem.js";
 import { makeObjectTemplate } from "../templates/object.js";
-import { generateResolver } from "./generator.js";
 import { getObjectFieldsString } from "./objectFields.js";
 
 type ResolverType = "queries" | "mutations";
+
+type AllOperation =
+    | (typeof queryOperationNames)[number]
+    | (typeof mutationOperationNames)[number];
+
+/** Map a CRUD operation name to its generated resolver source. */
+function generateResolver({
+    config,
+    operationName,
+    modelName,
+}: {
+    config: ConfigInternal;
+    operationName: AllOperation;
+    modelName: string;
+}) {
+    switch (operationName) {
+        case "findFirst":
+            return makeFindFirst({ config, modelName });
+        case "findMany":
+            return makeFindMany({ config, modelName });
+        case "count":
+            return makeCount({ config, modelName });
+        case "findUnique":
+            return makeFindUnique({ config, modelName });
+        case "createMany":
+            return makeCreateMany({ config, modelName });
+        case "createOne":
+            return makeCreateOne({ config, modelName });
+        case "deleteMany":
+            return makeDeleteMany({ config, modelName });
+        case "deleteOne":
+            return makeDeleteOne({ config, modelName });
+        case "updateMany":
+            return makeUpdateMany({ config, modelName });
+        case "updateOne":
+            return makeUpdateOne({ config, modelName });
+        case "upsertOne":
+            return makeUpsertOne({ config, modelName });
+        default:
+            return null;
+    }
+}
 
 const getResolverTypeName = (type: ResolverType) => {
     return type === "mutations" ? "Mutation" : "Query";

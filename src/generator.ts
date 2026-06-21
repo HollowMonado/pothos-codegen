@@ -1,16 +1,13 @@
-import generatorHelper, { GeneratorOptions } from "@prisma/generator-helper";
+import generatorHelper from "@prisma/generator-helper";
 import { generateCrud } from "./crudGenerator/index.js";
 import { generateInputs } from "./inputsGenerator/index.js";
-import { getConfig } from "./utils/config.js";
+import { getConfig, type ExtendedGeneratorOptions } from "./utils/config.js";
+
+// Re-exported for backwards compatibility; the type now lives in config.ts to
+// avoid a config.ts <-> generator.ts import cycle.
+export type { ExtendedGeneratorOptions };
 
 const { generatorHandler } = generatorHelper;
-
-// Types from the generator, in `schema.prisma`
-type SchemaGeneratorExtensionOptions = { generatorConfigPath?: string };
-
-// default config from generator, with the path option
-export type ExtendedGeneratorOptions = SchemaGeneratorExtensionOptions &
-    GeneratorOptions;
 
 generatorHandler({
     onManifest: () => ({

@@ -2,8 +2,8 @@ import { ConfigInternal } from "utils/config.js";
 import { firstLetterLowerCase } from "utils/string.js";
 
 export const queryOperationNames = ["findFirst", "findMany", "count", "findUnique"] as const;
-export type QueryOperation = (typeof queryOperationNames)[number];
-export const batchQueryOperations = ["count"];
+type QueryOperation = (typeof queryOperationNames)[number];
+const batchQueryOperations = ["count"];
 
 function makeQueryTemplate({
     queryOperation,
@@ -167,10 +167,3 @@ export function makeCount({ config, modelName }: { config: ConfigInternal; model
         }),
     });
 }
-
-export const queries = {
-    makeFindFirst,
-    makeFindMany,
-    makeCount,
-    makeFindUnique,
-};

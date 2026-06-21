@@ -4,11 +4,13 @@
     "compilerOptions": {
         "incremental": true,
         "types": ["node"],
-        "baseUrl": "./src",
+        "paths": {
+            "*": ["./src/*"]
+        },
 
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "moduleDetection": "force",
         "isolatedModules": true,
         "esModuleInterop": true,
@@ -16,7 +18,11 @@
 
         "removeComments": true,
         "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "emitDeclarationOnly": true,
         "outDir": "./dist",
+        "rootDir": "./src",
         "lib": ["ESNext"],
 
         "strict": true,

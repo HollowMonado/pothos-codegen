@@ -1,42 +1,60 @@
 {
-  "name": "pothos-codegen",
+  "name": "@ember-coding/pothos-codegen",
   "version": "0.1.0",
   "license": "MIT",
   "description": "A prisma generator that generate input types for Pothos. And optionally generate all crud. Fork of https://github.com/Cauen/prisma-generator-pothos-codegen",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
   "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "pothos-codegen": "./dist/bin.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HollowMonado/pothos-codegen.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.ember-coding.com/",
+    "access": "restricted"
   },
   "scripts": {
     "test": "vitest",
-    "swc_compile": "swc src --out-dir=dist",
-    "build": "npm run swc_compile",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "swc_compile": "swc src --out-dir=dist --strip-leading-paths",
+    "build_types": "tsc",
+    "build": "npm run clean && npm run swc_compile && npm run build_types",
     "prepare": "npm run build"
   },
-  "bin": {
-    "pothos-codegen": "./dist/src/bin.js"
-  },
   "peerDependencies": {
-    "@pothos/core": "^4.6.2",
-    "@pothos/plugin-prisma": "^4.8.1",
-    "@prisma/client": "^6.8.2",
-    "prisma": "^6.8.2"
+    "@pothos/core": "^4.13.0",
+    "@pothos/plugin-prisma": "^4.14.3",
+    "@prisma/client": "^7.8.0",
+    "prisma": "^7.8.0"
   },
   "devDependencies": {
-    "@prisma/internals": "6.8.2",
-    "@swc/cli": "^0.7.7",
-    "@swc/core": "^1.11.29",
-    "@types/node": "^22.15.23",
-    "prettier": "^3.5.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "vitest": "^3.1.4"
+    "@prisma/internals": "^7.8.0",
+    "@swc/cli": "^0.8.1",
+    "@swc/core": "^1.15.41",
+    "@types/node": "^26.0.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@prisma/generator-helper": "6.8.2"
+    "@prisma/generator-helper": "^7.8.0"
   }
 }

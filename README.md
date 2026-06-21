@@ -40,29 +40,36 @@ On `prisma generate` we create:
 
 ### Install
 
-Using yarn
+This package is published to the private registry at `npm.ember-coding.com` under the
+`@ember-coding` scope. Point the scope at the registry once (in your project's `.npmrc`
+or `~/.npmrc`):
+
+```ini
+@ember-coding:registry=https://npm.ember-coding.com/
+//npm.ember-coding.com/:_authToken=${NPM_TOKEN}
+```
+
+Then install with yarn
 
 ```sh
-yarn add -D prisma-generator-pothos-codegen
+yarn add -D @ember-coding/pothos-codegen
 ```
 
 or using npm
 
 ```sh
-npm install --save-dev prisma-generator-pothos-codegen
+npm install --save-dev @ember-coding/pothos-codegen
 ```
 
 ### Peer dependencies
 
-The package has been developed and tested up to the following peer dependencies (see updated [example](/examples/inputs-simple-sqlite)):
-
-<!-- TODO Maybe we could have some sort of automated pipeline that tests different versions of these peer deps? -->
+The package has been developed and tested up to the following peer dependencies:
 
 ```
-"@pothos/core": "^4.0.2",
-"@pothos/plugin-prisma": "^4.0.3"",
-"@prisma/client": "^5.15.1",
-"prisma": "^5.15.1",
+"@pothos/core": "^4.13.0",
+"@pothos/plugin-prisma": "^4.14.3",
+"@prisma/client": "^7.8.0",
+"prisma": "^7.8.0",
 ```
 
 Using higher versions may break something. In these cases, please open a new issue.
@@ -81,7 +88,7 @@ generator pothos {
 }
 
 generator pothosCrud {
-  provider = "prisma-generator-pothos-codegen"
+  provider = "@ember-coding/pothos-codegen"
   generatorConfigPath = "./pothos.config.js"
   // You may also set the `generatorConfigPath` via the `POTHOS_CRUD_CONFIG_PATH` environment variable.
   // The environment variable will override the path hardcoded here.
@@ -97,7 +104,7 @@ model User {
 #### Add scalar types to the builder
 
 ```ts
-import { Scalars } from "prisma-generator-pothos-codegen";
+import { Scalars } from "@ember-coding/pothos-codegen";
 import { Prisma } from ".prisma/client";
 
 export const builder = new SchemaBuilder<{
@@ -114,7 +121,7 @@ export const builder = new SchemaBuilder<{
 ```js
 // ./pothos.config.js
 
-/** @type {import('prisma-generator-pothos-codegen').Config} */
+/** @type {import('@ember-coding/pothos-codegen').Config} */
 module.exports = {
     inputs:  },
     crud: {

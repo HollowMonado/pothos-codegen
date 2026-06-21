@@ -8,7 +8,7 @@ describe("getInputs", () => {
         const dmmf = await getSampleDMMF("complex");
         const defaultConfig = getDefaultConfig();
         const builtString = `export const UserCreateInput = builder.inputRef<PrismaUpdateOperationsInputFilter<Prisma.UserCreateInput>, false>('UserCreateInput').implement({`;
-        const includedInputs = getInputs(defaultConfig, dmmf);
+        const includedInputs = getInputs({ config: defaultConfig, dmmf });
         expect(includedInputs.includes(builtString)).toBe(true);
     });
 
@@ -16,27 +16,29 @@ describe("getInputs", () => {
         const dmmf = await getSampleDMMF("complex");
         const defaultConfig = getDefaultConfig();
         const builtStrings = [
-            `export const BirdWhereUniqueInputFields = (t: any) => ({
-  id: t.id({"required":false}),`,
-            `export const IdOnlyCreateManyInputFields = (t: any) => ({
-  id: t.id({"required":false}),`,
+            `('BirdWhereUniqueInput').implement({
+  fields: (t) => ({
+    id: t.id({"required":false}),`,
+            `('IdOnlyWhereUniqueInput').implement({
+  fields: (t) => ({
+    id: t.id({"required":false}),`,
         ];
-        const includedInputs = getInputs(
-            {
+        const includedInputs = getInputs({
+            config: {
                 ...defaultConfig,
                 inputs: {
                     ...defaultConfig.inputs,
                     mapIdFieldsToGraphqlId: "WhereUniqueInputs",
                 },
             },
-            dmmf
-        );
+            dmmf,
+        });
 
         builtStrings.forEach((builtString) => {
             expect(includedInputs.includes(builtString)).toBe(true);
         });
 
-        const excludedInputs = getInputs(defaultConfig, dmmf);
+        const excludedInputs = getInputs({ config: defaultConfig, dmmf });
         builtStrings.forEach((builtString) => {
             expect(excludedInputs.includes(builtString)).toBe(false);
         });

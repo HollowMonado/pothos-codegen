@@ -1,6 +1,8 @@
-// /** @type {import('prisma-generator-pothos-codegen').Config} */
+// fallow-ignore-file unused-file
+// Loaded dynamically by parseConfig() in the config tests, so static analysis
+// can't see the reference.
 
-/** @type {import('../utils/config').Config} */
+/** @type {import('../../src/utils/config').Config} */
 module.exports = {
     crud: {
         outputDir: "./src/schema/__generated__/",

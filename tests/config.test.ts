@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { ExtendedGeneratorOptions } from "../src/generator";
 import * as config from "../src/utils/config";
 import { getSampleDMMF } from "./data/getPrismaSchema.ts";
@@ -62,9 +62,6 @@ const generateOptions = async (
     } satisfies ExtendedGeneratorOptions;
 };
 
-const matchImport = expect.stringMatching(/^import /);
-const matchRelativePath = expect.stringMatching(/^\.\//);
-
 afterEach(() => {
     delete process.env.POTHOS_CRUD_CONFIG_PATH;
 });
@@ -112,104 +109,65 @@ describe("parseConfig", () => {
     const { parseConfig } = config;
 
     it(`should throw error if the file doesn't exist`, async () => {
-        const fileName = "./does-not-exist";
-        const regexp = new RegExp(`^Cannot find module '${fileName}'`);
-
-        await expect(parseConfig(fileName)).rejects.toThrow(regexp);
+        await expect(
+            parseConfig({ configPath: "./does-not-exist" })
+        ).rejects.toThrow(/does-not-exist/);
     });
 
     it(`should parse the config file`, async () => {
-        const configs = await parseConfig("../../tests/data/configs.js");
+        const configs = await parseConfig({
+            configPath: "../../tests/data/configs.js",
+        });
 
         expect(configs).toEqual({
-            crud: expect.objectContaining({
-                deleteOutputDirBeforeGenerate: expect.any(Boolean),
-                disabled: expect.any(Boolean),
-                excludeResolversContain: expect.arrayContaining([
-                    expect.any(String),
-                ]),
-                outputDir: matchRelativePath,
-                prismaCaller: expect.any(String),
-            }),
-            global: {},
-            inputs: expect.objectContaining({
-                outputFilePath: matchRelativePath,
-                prismaImporter: matchImport,
-            }),
+            crud: {
+                outputDir: "./src/schema/__generated__/",
+                excludeResolversContain: ["User"],
+                prismaCaller: "context.db",
+                disabled: false,
+            },
+            inputs: {
+                prismaImporter: `import { Prisma } from '.prisma/client';`,
+            },
+            global: {
+                deleteOutputDirBeforeGenerate: true,
+            },
         });
     });
 });
 
 describe("getConfig", () => {
-    const { getConfig } = config;
-    const getDefaultConfigMock = vi.spyOn(config, "getDefaultConfig");
+    const { getConfig, getDefaultConfig } = config;
 
     it(`should return the default config if a configPath doesn't exist`, async () => {
         const options = await generateOptions();
-        const configs = await getConfig(options);
+        const configs = await getConfig({ extendedGeneratorOptions: options });
 
-        expect(getDefaultConfigMock).toHaveBeenCalledWith();
-        expect(configs).toEqual({
-            crud: expect.objectContaining({
-                deleteOutputDirBeforeGenerate: false,
-                disabled: false,
-                excludeResolversContain: [],
-                excludeResolversExact: [],
-                generateAutocrud: true,
-                includeResolversContain: [],
-                includeResolversExact: [],
-                inputsImporter: `import * as Inputs from '../inputs';`,
-                outputDir: "./generated",
-                prismaCaller: "context.prisma",
-                prismaImporter: `import { Prisma } from '.prisma/client';`,
-                replacer: expect.any(Function),
-            }),
-            global: expect.objectContaining({
-                afterGenerate: expect.any(Function),
-                beforeGenerate: expect.any(Function),
-                replacer: expect.any(Function),
-            }),
-            inputs: expect.objectContaining({
-                excludeScalars: [],
-                outputFilePath: "./generated/inputs.ts",
-                prismaImporter: `import { Prisma } from '.prisma/client';`,
-                replacer: expect.any(Function),
-            }),
-        });
+        expect(configs).toEqual(getDefaultConfig());
     });
 
     it(`should return custom configuration merged with the defaults`, async () => {
         const options = await generateOptions("../data/configs.js");
-        const configs = await getConfig(options);
+        const configs = await getConfig({ extendedGeneratorOptions: options });
+        const defaultConfig = getDefaultConfig();
 
-        expect(getDefaultConfigMock).toHaveBeenCalledWith({});
+        // Default config, with the overrides from tests/data/configs.js merged in.
         expect(configs).toEqual({
-            crud: expect.objectContaining({
-                deleteOutputDirBeforeGenerate: true,
-                disabled: false,
-                excludeResolversContain: ["User"],
-                excludeResolversExact: [],
-                generateAutocrud: true,
-                includeResolversContain: [],
-                includeResolversExact: [],
-                inputsImporter: `import * as Inputs from '../inputs';`,
+            inputs: {
+                ...defaultConfig.inputs,
+                prismaImporter: `import { Prisma } from '.prisma/client';`,
+            },
+            crud: {
+                ...defaultConfig.crud,
                 outputDir: "./src/schema/__generated__/",
+                excludeResolversContain: ["User"],
                 prismaCaller: "context.db",
-                prismaImporter: `import { Prisma } from '.prisma/client';`,
-                replacer: expect.any(Function),
-                resolverImports: "",
-            }),
-            global: expect.objectContaining({
-                afterGenerate: expect.any(Function),
-                beforeGenerate: expect.any(Function),
-                replacer: expect.any(Function),
-            }),
-            inputs: expect.objectContaining({
-                excludeScalars: [],
-                outputFilePath: "./src/schema/__generated__/inputs.ts",
-                prismaImporter: `import { Prisma } from '.prisma/client';`,
-                replacer: expect.any(Function),
-            }),
+                disabled: false,
+            },
+            global: {
+                ...defaultConfig.global,
+                deleteOutputDirBeforeGenerate: true,
+            },
         });
     });
 });

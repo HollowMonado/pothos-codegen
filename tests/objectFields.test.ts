@@ -1,32 +1,23 @@
+import type { DMMF } from "@prisma/generator-helper";
 import { describe, expect, it } from "vitest";
-import { cleanifyDocumentation } from "../src/crudGenerator/utils/objectFields.ts";
-import { escapeQuotesAndMultilineSupport } from "../src/utils/string.ts";
+import { getObjectFieldsString } from "../src/crudGenerator/utils/objectFields.ts";
 
 describe("objectFields", () => {
-    it("cleanifyDocumentation", () => {
-        expect(cleanifyDocumentation("line 1\nline2\n@Pothos.omit()")).toBe(
-            "line 1\nline2"
-        );
-        expect(
-            cleanifyDocumentation(
-                "@Pothos.omit(create, update) createdAt description"
-            )
-        ).toBe("createdAt description");
-    });
+    it("exposes scalar fields and maps relations", () => {
+        const dmmfFields = [
+            { name: "id", type: "Int", isRequired: true },
+            { name: "bio", type: "String", isRequired: false },
+            { name: "posts", type: "Post", relationName: "PostToUser", isRequired: false },
+            { name: "profile", type: "Profile", relationName: "ProfileToUser", isRequired: true },
+        ] as unknown as readonly DMMF.Field[];
 
-    it("convertToMultilineString + cleanifyDocumentation", () => {
-        expect(
-            escapeQuotesAndMultilineSupport(
-                cleanifyDocumentation("line 1\nline2\n@Pothos.omit()")
-            )
-        ).toBe("`line 1\nline2`");
-        expect(escapeQuotesAndMultilineSupport(cleanifyDocumentation(""))).toBe(
-            undefined
-        );
-        expect(
-            escapeQuotesAndMultilineSupport(
-                cleanifyDocumentation("@Pothos.omit(create, update)  ")
-            )
-        ).toBe(undefined);
+        const { fields } = getObjectFieldsString({ modelName: "User", dmmfFields });
+
+        expect(fields).toEqual([
+            `id: t.expose("id", {type: "Int", nullable: false}),`,
+            `bio: t.expose("bio", {type: "String", nullable: true}),`,
+            `posts: t.relation('posts', { nullable: true }),`,
+            `profile: t.relation('profile', { nullable: false }),`,
+        ]);
     });
 });

@@ -10,8 +10,8 @@ export const mutationOperationNames = [
     "updateOne",
     "upsertOne",
 ] as const;
-export type MutationOperation = (typeof mutationOperationNames)[number];
-export const batchMutationOperations = ["updateMany", "deleteMany"];
+type MutationOperation = (typeof mutationOperationNames)[number];
+const batchMutationOperations = ["updateMany", "deleteMany"];
 
 function makeMutationTemplate({
     mutationOperation,
