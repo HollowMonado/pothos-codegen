@@ -40,13 +40,13 @@ On `prisma generate` we create:
 
 ### Install
 
-This package is published to the private registry at `npm.ember-coding.com` under the
+This package is published to the private registry at `npm.internal.ember-coding.com` under the
 `@ember-coding` scope. Point the scope at the registry once (in your project's `.npmrc`
 or `~/.npmrc`):
 
 ```ini
-@ember-coding:registry=https://npm.ember-coding.com/
-//npm.ember-coding.com/:_authToken=${NPM_TOKEN}
+@ember-coding:registry=https://npm.internal.ember-coding.com/
+//npm.internal.ember-coding.com/:_authToken=${NPM_TOKEN}
 ```
 
 Then install with yarn

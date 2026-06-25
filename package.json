@@ -28,7 +28,7 @@
     "url": "git+https://github.com/HollowMonado/pothos-codegen.git"
   },
   "publishConfig": {
-    "registry": "https://npm.ember-coding.com/",
+    "registry": "https://npm.internal.ember-coding.com/",
     "access": "restricted"
   },
   "scripts": {
