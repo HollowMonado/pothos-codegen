@@ -1,5 +1,5 @@
 {
-  "name": "@ember-coding/pothos-codegen",
+  "name": "@ember-coding/ember-pothos-codegen",
   "version": "0.1.0",
   "license": "MIT",
   "description": "A prisma generator that generate input types for Pothos. And optionally generate all crud. Fork of https://github.com/Cauen/prisma-generator-pothos-codegen",
@@ -18,7 +18,7 @@
     "dist"
   ],
   "bin": {
-    "pothos-codegen": "./dist/bin.js"
+    "ember-pothos-codegen": "./dist/bin.js"
   },
   "engines": {
     "node": ">=20"
